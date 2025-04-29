@@ -16,23 +16,25 @@ This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enab
 
 Normally, interpolation of an identifier (*identifiers wrapped with curly braces, for example `{name}` or `{props.src}`*) within markdown content doesn't work at all. **The interpolation of an identifier, in other words MDX expressions, is a matter of MDX.**
 
-MDX expressions in some places in MDX is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
+MDX expressions in some places is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
+
+If your integration supports "md" format, like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then `recma-mdx-interpolate` can be used for "md" format as well.
 
 #### Considerations on the parts of markdown links `[text part](href part "title part")`
 
-**Text part** of a link is parsed as markdown, and the interpolation happens already by default in MDX. Hence, `recma-mdx-interpolate` doesn't need to handle that part.
+**Text part** of a link is parsed as markdown, and the interpolation happens already by default in MDX. `recma-mdx-interpolate` doesn't need to handle that part in MDX. But, if the format is markdown "md", since interpolation doesn't happen by default `recma-mdx-interpolate` will handle the interpolation.
 
-**Href part** of a link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part.
+**Href part** of a link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
 
-**Title part** of a link remains as-is in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part as well.
+**Title part** of a link remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
 
 #### Considerations on the parts of markdown images `![alt part](src part "title part")`
 
-**Alt part** of an image is parsed as plain text and **curly braces are removed in MDX (not in markdown)**. The interpolation doesn't work in that part. Since curly braces are removed, in order `recma-mdx-interpolate` to handle that part, we need to use **double curly braces** `![{{alt}}](image.png)` as a workaround in that part, in MDX. If the identifier is a valid javascript variable name it is okey; but if the identifier has a object notation like `![{{image.alt}}](image.png)` in double curly braces, the internal parser `acorn` throws an error. To handle this situation, use double colon `:` instead of dot `.` in object notation: `![{{image:alt}}](image.png)` which is going to be handled by `recma-mdx-interpolate`. This is a weird workaround, but nothing to do else due to MDX internal parsing mechanism. The workaround is for MDX, not for markdown in which curly braces are not removed.
+**Alt part** of an image is parsed as plain text and **curly braces are removed in MDX (not in markdown)**. The interpolation doesn't work by default. Since curly braces are removed, in order `recma-mdx-interpolate` to handle that part, we need to use **double curly braces** `![{{alt}}](image.png)` as a workaround in that part, in MDX. It is okey if the identifier is a valid javascript variable name; but if the identifier has a object notation like `![{{image.alt}}](image.png)` in double curly braces, the internal parser `acorn` throws an error. To handle this situation, use double colon `:` instead of dot `.` in object notation `![{{image:alt}}](image.png)` which is going to be handled by `recma-mdx-interpolate`. This is a weird workaround, but nothing to do else due to MDX internal parsing mechanism. The workaround is for MDX, not for markdown in which curly braces are not removed.
 
-**Src part** of an image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D` in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part.
+**Src part** of an image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
 
-**Title part** of an image remains as-is in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part as well.
+**Title part** of an image remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
 
 ## When should I use this?
 
@@ -45,11 +47,11 @@ If you're working with MDX and want to interpolate identifiers within **alt**, *
 ```
 
 Here are some explanations I should emphasise:
-+ It ensures javascript interpolation, like `{variable_name}`, for only **href**/**title** parts of a **link** and **alt**/**src**/**title** parts of an image in "mdx" format, additionally **text** part of a **link** in "md" format.
++ It ensures javascript interpolation, like `{variable_name}`, for only **href**/**title** parts of a **link** and **alt**/**src**/**title** parts of an image in "md" and "mdx" format, additionally **text** part of a **link** in "md" format.
 
 + The **text** part of a **link** *(the children of an anchor)* is already interpolated in MDX, so **`recma-mdx-interpolate`** does not touch it `[{already.interpolated}](...)` if the format is "mdx".
 
-+ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use [aferomentioned workaround](https://github.com/ipikuka/recma-mdx-interpolate#considerations-on-the-parts-of-markdown-images-alt-partsrc-part-title-part) if the format is "mdx".
++ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use [aferomentioned workaround](#considerations-on-the-parts-of-markdown-images-alt-partsrc-part-title-part) if the format is "mdx".
 
 + If you are using a plugin (like **[`rehype-image-toolkit`](https://github.com/ipikuka/rehype-image-toolkit)**) to convert image syntax to video/audio, then **`recma-mdx-interpolate`** also supports **src**/**title** of a `<video>`/`<audio>` elements; and **src** of a `<source>` element.
 
@@ -58,13 +60,15 @@ Here are some explanations I should emphasise:
 
 ### The list of the tags and attributes that `recma-mdx-interpolate` processes
 
-|tags              |with "mdx" format        |with "md" format                               |
-|------------------|-------------------------|-----------------------------------------------|
-| **`<a> (link)`** | **`href`**, **`title`**`|**`text (children)`**, **`href`**, **`title`**`|
-| **`<img>`**      | **`src`**, **`title`**  |**`alt`**, **`src`**, **`title`**              |
-| **`<video>`**    | **`src`**, **`title`**  |**`src`**, **`title`**                         |
-| **`<audio>`**    | **`src`**, **`title`**  |**`src`**, **`title`**                         |
-| **`<source>`**   | **`src`**               |**`src`**                                      |
+|tags              |with "mdx" format                               |with "md" format                               |
+|------------------|------------------------------------------------|-----------------------------------------------|
+| **`<a> (link)`** | **`href`**, **`title`**                        |**`text (children)`**, **`href`**, **`title`** |
+| **`<img>`**      | **`alt`**<sup>*</sup>, **`src`**, **`title`**  |**`alt`**, **`src`**, **`title`**              |
+| **`<video>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
+| **`<audio>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
+| **`<source>`**   | **`src`**                                      |**`src`**                                      |
+
+*Note `*`: works with a workaround only.*
 
 ## Installation
 
@@ -186,7 +190,7 @@ It is a **boolean** option to disable the plugin completely.
 
 It is `false` by default.
 
-It could be useful if you want the plugin doesn't work when the format is not "mdx".
+It could be useful if you want the plugin NOT to work when the format is not "mdx".
 
 ```javascript
 use(recmaMdxInterpolate, { disable: format !== "mdx" } as InterpolateOptions);
