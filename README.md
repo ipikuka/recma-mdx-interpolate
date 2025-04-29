@@ -8,50 +8,85 @@
 [![typescript][badge-typescript]][url-typescript]
 [![license][badge-license]][url-license]
 
-This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enables interpolation of identifiers wrapped in curly braces within the `alt`, `src`, and `title` attributes of markdown link and image syntax in MDX**.
+This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enables interpolation of identifiers wrapped in curly braces within the `alt`, `src`, `href`, and `title` attributes of markdown link and image syntax in MDX**.
 
 **[unified][unified]** is a project that transforms content with abstract syntax trees (ASTs) using the new parser **[micromark][micromark]**. **[recma][recma]** adds support for producing a javascript code by transforming **[esast][esast]** which stands for Ecma Script Abstract Syntax Tree (AST) that is used in production of compiled source for the **[MDX][MDX]**.
 
 ## The facts
 
-Normally, interpolation of an identifier (*identifiers wrapped with curly braces, for example `{name}` or `{props.src}`*) within markdown content doesn't work at all. **The interpolation of an identifier, in other words MDX expressions, is a matter of MDX.**
+Normally, interpolation of an identifier (*identifiers wrapped with curly braces, for example `{name}` or `{props.src}`*) within markdown content doesn't work. **The interpolation of an identifier, in other words MDX expressions, is a matter of MDX.**
 
 MDX expressions in some places is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
 
-If your integration supports "md" format, like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then `recma-mdx-interpolate` can be used for "md" format as well.
+**If your integration supports "md" format,** like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then `recma-mdx-interpolate` can be used for "md" format as well.
 
-#### Considerations on the parts of markdown links `[text part](href part "title part")`
+### Considerations for Markdown Link Syntax
+Syntax: `[text part](href part "title part")`
 
-**Text part** of a link is parsed as markdown, and the interpolation happens already by default in MDX. `recma-mdx-interpolate` doesn't need to handle that part in MDX. But, if the format is markdown "md", since interpolation doesn't happen by default `recma-mdx-interpolate` will handle the interpolation.
+**Href part** of a markdown link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
 
-**Href part** of a link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
+**Title part** of a markdown link remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
 
-**Title part** of a link remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
+**Text part** of a markdown link is parsed as inline markdown, which means it can be broken into child nodes like `strong`, `emphasis`, `inlineCode`, or plain text. In MDX, these nodes support interpolation by default, so `recma-mdx-interpolate` doesn’t need to handle them. In plain markdown (`md`), although the text is also parsed into children, those nodes do not support interpolation by default, so `recma-mdx-interpolate` takes care of it.
 
-#### Considerations on the parts of markdown images `![alt part](src part "title part")`
+### Considerations for Markdown Image Syntax
+Syntax: `![alt part](src part "title part")`
 
-**Alt part** of an image is parsed as plain text and **curly braces are removed in MDX (not in markdown)**. The interpolation doesn't work by default. Since curly braces are removed, in order `recma-mdx-interpolate` to handle that part, we need to use **double curly braces** `![{{alt}}](image.png)` as a workaround in that part, in MDX. It is okey if the identifier is a valid javascript variable name; but if the identifier has a object notation like `![{{image.alt}}](image.png)` in double curly braces, the internal parser `acorn` throws an error. To handle this situation, use double colon `:` instead of dot `.` in object notation `![{{image:alt}}](image.png)` which is going to be handled by `recma-mdx-interpolate`. This is a weird workaround, but nothing to do else due to MDX internal parsing mechanism. The workaround is for MDX, not for markdown in which curly braces are not removed.
+**Src part** of a markdown image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
 
-**Src part** of an image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
+**Title part** of a markdown image remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
 
-**Title part** of an image remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
+**Alt part** of a markdown image behaves differently in MDX compared to standard markdown:
+- In **markdown**, the alt text is treated as plain text, and curly braces `{}` are preserved; so `recma-mdx-interpolate` handles the interpolation.
+- In **MDX**, however, curly braces are **automatically stripped** from the alt text. This means standard interpolation like `![{alt}](image.png)` doesn't work — there's no way to detect the interpolation syntax after MDX parsing. Since curly braces are stripped, we need to find a workaround for MDX.
+
+#### Workaround for Interpolation in `alt` part of markdown image in MDX
+
+To enable interpolation in the `alt` part of an image in MDX, use the following workaround:
+
+- Use **double curly braces**:
+```md
+![{{alt}}](image.png)
+```
+This works if `alt` is a simple identifier (e.g., a variable name like `my_alt` or `altText`). 
+
+For `object paths` (e.g., `image.alt`, `props.image.alt`), double curly braces alone cause the internal MDX parser (`acorn`) to throw an `Unexpected token` error. To work around this:
+- Use **prefix before object path with any alphanumeric identifier (or underscore), followed by a colon `:`**
+```md
+![{{x:image.alt}}](image.png)
+![{{_:image.alt}}](image.png)
+![{{alt:props.image.alt}}](image.png)
+```
+This format is recognized and handled by the `recma-mdx-interpolate` plugin.
+
+> **Note:** The colon **`:`** is essential — other separators (like `@`, `-`, or `%`) do not work.
+
+**As a summary,**
+- In **markdown**:
+  Use standard interpolation like `![{a}](...)` or `![{a.b.c}](...)` 
+- In **MDX**:
+  Use double curly braces: 
+  - `![{{a}}](...)` for simple variables
+  - `![{{any:a.b.c}}](...)` for object paths (required workaround)
+
+This is a weird workaround, but nothing to do else due to internal MDX parsing, and the double-curly-braces-and-colon-based workaround is the only known reliable method after extensive testing. The workaround is for MDX, not for markdown in which curly braces are not removed.
 
 ## When should I use this?
 
-If you're working with MDX and want to interpolate identifiers within **alt**, **src**, and **title** attributes of an **image** and **link** constructed with **markdown syntax**, such as:
+If you want to interpolate identifiers within **alt**, **src**, **href**, and **title** attributes of an **image** and **link** constructed with **markdown syntax**, such as:
 
 ```markdown
 [{props.email}](mailto:{props.email} "{props.title}")
 
-![{alt}]({src} "{title}")
+![{{alt}}]({src} "{title}")
 ```
 
 Here are some explanations I should emphasise:
-+ It ensures javascript interpolation, like `{variable_name}`, for only **href**/**title** parts of a **link** and **alt**/**src**/**title** parts of an image in "md" and "mdx" format, additionally **text** part of a **link** in "md" format.
++ `recma-mdx-interpolate` works for only **href**/**title** parts of a markdown **link** and **alt**/**src**/**title** parts of a markdown image in "md" and "mdx" format, additionally **text** part of a **link** in "md" format.
 
 + The **text** part of a **link** *(the children of an anchor)* is already interpolated in MDX, so **`recma-mdx-interpolate`** does not touch it `[{already.interpolated}](...)` if the format is "mdx".
 
-+ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use [aferomentioned workaround](#considerations-on-the-parts-of-markdown-images-alt-partsrc-part-title-part) if the format is "mdx".
++ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use [aferomentioned workaround](#workaround-for-interpolation-in-alt-part-of-markdown-image-in-mdx) if the format is "mdx".
 
 + If you are using a plugin (like **[`rehype-image-toolkit`](https://github.com/ipikuka/rehype-image-toolkit)**) to convert image syntax to video/audio, then **`recma-mdx-interpolate`** also supports **src**/**title** of a `<video>`/`<audio>` elements; and **src** of a `<source>` element.
 
@@ -259,7 +294,7 @@ I like to contribute the Unified / Remark / MDX ecosystem, so I recommend you to
 - [`recma-mdx-html-override`](https://www.npmjs.com/package/recma-mdx-html-override)
   – Recma plugin to allow selected raw HTML elements to be overridden via MDX components.
 - [`recma-mdx-interpolate`](https://www.npmjs.com/package/recma-mdx-interpolate)
-  – Recma plugin to enable interpolation of identifiers wrapped in curly braces within the `alt`, `src`, and `title` attributes of markdown link and image syntax in MDX.
+  – Recma plugin to enable interpolation of identifiers wrapped in curly braces within the `alt`, `src`, `href`, and `title` attributes of markdown link and image syntax in MDX.
 
 ## License
 
