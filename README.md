@@ -18,7 +18,7 @@ Normally, interpolation of an identifier (*identifiers wrapped with curly braces
 
 MDX expressions in some places in MDX is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
 
-### Considerations on the parts of markdown links `[text part](href part "title part")` regarding with MDX
+#### Considerations on the parts of markdown links `[text part](href part "title part")` regarding with MDX
 
 **Text part** of a link is parsed as markdown, and the interpolation happens already by default in MDX. Hence, `recma-mdx-interpolate` doesn't need to handle that part.
 
@@ -26,9 +26,9 @@ MDX expressions in some places in MDX is not viable since MDX is not a template 
 
 **Title part** of a link remains as-is in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part as well.
 
-### Considerations on the parts of markdown images `![alt part](src part "title part")` regarding with MDX
+#### Considerations on the parts of markdown images `![alt part](src part "title part")` regarding with MDX
 
-**Alt part** of an image is parsed as plain text and curly braces are removed in MDX (not in markdown). The interpolation doesn't work in that part. Since curly braces are removed, in order `recma-mdx-interpolate` to handle that part, we need to use **double curly braces** `![{{alt}}](image.png)` as a workaround in that part, in MDX.
+**Alt part** of an image is parsed as plain text and **curly braces are removed in MDX (not in markdown)**. The interpolation doesn't work in that part. Since curly braces are removed, in order `recma-mdx-interpolate` to handle that part, we need to use **double curly braces** `![{{alt}}](image.png)` as a workaround in that part, in MDX. If the identifier is a valid javascript variable name it is okey; but if the identifier has a object notation like `![{{image.alt}}](image.png)` in double curly braces, the internal parser `acorn` throws an error. To handle this situation, you may use double colon `:` instead of dot `.` in object notation: `![{{image:alt}}](image.png)` which is going to be handled by `recma-mdx-interpolate`. This is a weird workaround, but nothing to do else due to MDX internal parsing mechanism. The workaround is for MDX, not for markdown in which curly braces are not removed.
 
 **Src part** of an image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D` in MDX. The interpolation doesn't work in that part. So, `recma-mdx-interpolate` handles that part.
 
@@ -50,7 +50,7 @@ Here are some explanations I should emphasise:
 
 + The **text** of a **link** *(the children of an anchor)* is already interpolated in MDX, but not in markdown format, so **`recma-mdx-interpolate`** does not touch it `[{already.interpolated}](...)` if the format is "mdx".
 
-+ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use **double curly braces** `![{{double.curly}}](image.png)` as a workaround in that part if the format is "mdx".
++ The curly braces in the **alt** of an **image** are removed during remark-mdx parsing in MDX (not in markdown format). So you need to use [aferomentioned workaround](https://github.com/ipikuka/recma-mdx-interpolate#considerations-on-the-parts-of-markdown-images-alt-partsrc-part-title-part-regarding-with-mdx) if the format is "mdx".
 
 + If you are using a plugin (like **[`rehype-image-toolkit`](https://github.com/ipikuka/rehype-image-toolkit)**) to convert image syntax to video/audio, then **`recma-mdx-interpolate`** also supports **src**/**title** of a `<video>`/`<audio>` elements; and **src** of a `<source>` element.
 
