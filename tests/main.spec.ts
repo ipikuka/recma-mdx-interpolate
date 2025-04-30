@@ -7,7 +7,7 @@ const getCompiled = async (source: string, options?: {}) => {
   return String(await compile(source, { recmaPlugins: [recmaMdxInterpolate], ...options }));
 };
 
-describe.only("recma-mdx-interpolate, links 1", () => {
+describe("recma-mdx-interpolate, links 1", () => {
   const source = dedent`
     [{x}]({a} "{t}")
 
@@ -15,7 +15,7 @@ describe.only("recma-mdx-interpolate, links 1", () => {
   `;
 
   // ******************************************
-  it("example in the README", async () => {
+  it("handle interpolation", async () => {
     expect(await getCompiled(source, { format: "md" })).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -54,7 +54,7 @@ describe.only("recma-mdx-interpolate, links 1", () => {
   });
 
   // ******************************************
-  it("example in the README, format mdx", async () => {
+  it("handle interpolation, format mdx", async () => {
     expect(await getCompiled(source)).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -93,7 +93,7 @@ describe.only("recma-mdx-interpolate, links 1", () => {
   });
 });
 
-describe.only("recma-mdx-interpolate, links 2", () => {
+describe("recma-mdx-interpolate, links 2", () => {
   const source = dedent`
     [**strong**{text}*italic*]({href} "{title}")
 
@@ -103,7 +103,7 @@ describe.only("recma-mdx-interpolate, links 2", () => {
   `;
 
   // ******************************************
-  it("example in the README", async () => {
+  it("handle template literals in links", async () => {
     expect(await getCompiled(source, { format: "md" })).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -159,7 +159,7 @@ describe.only("recma-mdx-interpolate, links 2", () => {
   });
 
   // ******************************************
-  it("example in the README, format mdx", async () => {
+  it("handle template literals in links, format mdx", async () => {
     expect(await getCompiled(source)).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -217,7 +217,7 @@ describe.only("recma-mdx-interpolate, links 2", () => {
 
 describe("recma-mdx-interpolate, images 1", () => {
   // ******************************************
-  it("example in the README", async () => {
+  it("handle interpolation", async () => {
     const source = dedent`
       ![{x}]({a} "{t}")
       ![{{x}}]({a} "{t}")
@@ -282,7 +282,7 @@ describe("recma-mdx-interpolate, images 1", () => {
   });
 
   // ******************************************
-  it("example in the README, format mdx", async () => {
+  it("handle interpolation, format mdx", async () => {
     const source = dedent`
       ![{x}]({a} "{t}")
       ![{{x}}]({a} "{t}")
@@ -344,7 +344,7 @@ describe("recma-mdx-interpolate, images 2", () => {
   `;
 
   // ******************************************
-  it("handles workaround", async () => {
+  it("handle workaround", async () => {
     expect(await getCompiled(source, { format: "md" })).toMatchInlineSnapshot(`
       "import {jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -379,7 +379,7 @@ describe("recma-mdx-interpolate, images 2", () => {
   });
 
   // ******************************************
-  it("handles workaround, format mdx", async () => {
+  it("handle workaround, format mdx", async () => {
     expect(await getCompiled(source)).toMatchInlineSnapshot(`
       "import {jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
@@ -475,42 +475,6 @@ describe("recma-mdx-interpolate, images 3", () => {
             alt: \`\${image.alt} of site\`,
             title: \`\${image.title} > directives\`
           })]
-        });
-      }
-      export default function MDXContent(props = {}) {
-        const {wrapper: MDXLayout} = props.components || ({});
-        return MDXLayout ? _jsx(MDXLayout, {
-          ...props,
-          children: _jsx(_createMdxContent, {
-            ...props
-          })
-        }) : _createMdxContent(props);
-      }
-      "
-    `);
-  });
-});
-
-describe("recma-mdx-interpolate, trial", () => {
-  const source = dedent`
-    
-  `;
-
-  // ******************************************
-  it.only("example in the README", async () => {
-    expect(await getCompiled(source, { format: "md" })).toMatchInlineSnapshot(`
-      "import {jsx as _jsx} from "react/jsx-runtime";
-      function _createMdxContent(props) {
-        const _components = {
-          a: "a",
-          p: "p",
-          ...props.components
-        };
-        return _jsx(_components.p, {
-          children: _jsx(_components.a, {
-            href: "https://example.com",
-            children: xxx
-          })
         });
       }
       export default function MDXContent(props = {}) {
