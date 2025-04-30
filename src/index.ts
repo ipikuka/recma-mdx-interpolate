@@ -24,7 +24,7 @@ export type InterpolateOptions = {
   /**
    * Exclude specific tag and attributes
    */
-  exclude: Partial<typeof MapOfTargetTagAttributes>;
+  exclude?: Partial<typeof MapOfTargetTagAttributes>;
   /**
    * Disable the plugin (for example when the format is not "mdx")
    */
@@ -50,7 +50,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
   if (settings.disable) return;
 
   return (tree: Program) => {
-    // visit for JSX automatic runtime
+    // handle JSX automatic runtime
     visit(tree, (node) => {
       if (node.type !== "CallExpression") return CONTINUE;
 
@@ -138,7 +138,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
       return CONTINUE;
     });
 
-    // visit for JSX, when { jsx: true }
+    // handle JSX, when { jsx: true }
     visit(tree, (node) => {
       if (node.type !== "JSXElement") return CONTINUE;
 
