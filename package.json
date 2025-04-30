@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs --coverage",
     "test:main": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs main.spec.ts --watch",
+    "test:jsx": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs main.jsx.spec.ts --watch",
     "test:1": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs test1.spec.ts",
     "test:2": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs test2.spec.ts",
     "test:ref": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs reference.spec.ts --watch",
