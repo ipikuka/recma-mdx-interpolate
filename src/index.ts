@@ -169,6 +169,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
       if (openingElement && currentTag) {
         const allowedTag = MapOfTargetTagAttributes[currentTag];
         const excludedTag = settings.exclude[currentTag];
+
         const jsxAttributes = openingElement.attributes
           .filter((attr) => attr.type === "JSXAttribute")
           .filter((attr) => {
@@ -189,21 +190,27 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
                 expression: composeTemplateLiteral(propertyValue),
               };
             }
-          } else if (jsxAttribute.value?.type === "JSXExpressionContainer") {
-            visit(jsxAttribute.value, (node) => {
-              if (isStringLiteral(node)) {
-                const propertyValue = normalizeBracedExpressions(decodeURI(node.value));
-
-                if (/\{[^{}]+\}/.test(propertyValue)) {
-                  jsxAttribute.value = {
-                    type: "JSXExpressionContainer",
-                    expression: composeTemplateLiteral(propertyValue),
-                  };
-                }
-              }
-            });
           }
         });
+
+        // visit the children additionally, if the node is an anchor
+        if (openingElement && currentTag === "a") {
+          visit(node, (node_) => {
+            if (
+              node_.type === "JSXExpressionContainer" &&
+              node_.expression.type === "Literal" &&
+              typeof node_.expression.value === "string"
+            ) {
+              const propertyValue = normalizeBracedExpressions(
+                decodeURI(node_.expression.value),
+              );
+
+              if (/\{[^{}]+\}/.test(propertyValue)) {
+                node_.expression = composeTemplateLiteral(propertyValue);
+              }
+            }
+          });
+        }
       }
 
       return CONTINUE;
