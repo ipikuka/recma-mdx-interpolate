@@ -1,10 +1,15 @@
-import { compile } from "@mdx-js/mdx";
+import { compile, type CompileOptions } from "@mdx-js/mdx";
 import dedent from "dedent";
 
 import recmaMdxInterpolate from "../src";
 
-const getCompiled = async (source: string, options?: {}) => {
-  return String(await compile(source, { recmaPlugins: [recmaMdxInterpolate], ...options }));
+const getCompiled = async (source: string, options?: CompileOptions) => {
+  return String(
+    await compile(source, {
+      ...options,
+      recmaPlugins: [recmaMdxInterpolate],
+    }),
+  );
 };
 
 describe("recma-mdx-interpolate, links 1", () => {
