@@ -1,5 +1,6 @@
 import type { Plugin } from "unified";
 import type { ObjectExpression, Program } from "estree";
+import type { JSXOpeningElement } from "estree-jsx";
 import { CONTINUE, visit } from "estree-util-visit";
 
 import {
@@ -127,6 +128,77 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
 
                 if (/\{[^{}]+\}/.test(propertyValue)) {
                   Object.assign(node, composeTemplateLiteral(propertyValue));
+                }
+              }
+            });
+          }
+        });
+      }
+
+      return CONTINUE;
+    });
+
+    // visit for JSX, when { jsx: true }
+    visit(tree, (node) => {
+      if (node.type !== "JSXElement") return CONTINUE;
+
+      let openingElement: JSXOpeningElement | undefined;
+      let currentTag: TargetTag | undefined;
+
+      if (node.openingElement.name.type === "JSXMemberExpression") {
+        const jsxMemberExpression = node.openingElement.name;
+
+        if (
+          jsxMemberExpression.object.type === "JSXIdentifier" &&
+          jsxMemberExpression.object.name === "_components" &&
+          jsxMemberExpression.property.type === "JSXIdentifier" &&
+          targetTags.includes(jsxMemberExpression.property.name.toLowerCase())
+        ) {
+          openingElement = node.openingElement;
+          currentTag = jsxMemberExpression.property.name as TargetTag;
+        }
+      } else if (node.openingElement.name.type === "JSXIdentifier") {
+        const jsxIdentifier = node.openingElement.name;
+
+        if (targetTags.includes(jsxIdentifier.name.toLowerCase())) {
+          openingElement = node.openingElement;
+          currentTag = jsxIdentifier.name as TargetTag;
+        }
+      }
+
+      if (openingElement && currentTag) {
+        const allowedTag = MapOfTargetTagAttributes[currentTag];
+        const excludedTag = settings.exclude[currentTag];
+        const jsxAttributes = openingElement.attributes
+          .filter((attr) => attr.type === "JSXAttribute")
+          .filter((attr) => {
+            if (attr.name.type !== "JSXIdentifier") return false;
+            const attrName = attr.name.name.toLowerCase();
+            return filterNameAllowOrExlude(attrName, allowedTag, excludedTag);
+          });
+
+        jsxAttributes.forEach((jsxAttribute) => {
+          if (isStringLiteral(jsxAttribute.value)) {
+            const propertyValue = normalizeBracedExpressions(
+              decodeURI(jsxAttribute.value.value),
+            );
+
+            if (/\{[^{}]+\}/.test(propertyValue)) {
+              jsxAttribute.value = {
+                type: "JSXExpressionContainer",
+                expression: composeTemplateLiteral(propertyValue),
+              };
+            }
+          } else if (jsxAttribute.value?.type === "JSXExpressionContainer") {
+            visit(jsxAttribute.value, (node) => {
+              if (isStringLiteral(node)) {
+                const propertyValue = normalizeBracedExpressions(decodeURI(node.value));
+
+                if (/\{[^{}]+\}/.test(propertyValue)) {
+                  jsxAttribute.value = {
+                    type: "JSXExpressionContainer",
+                    expression: composeTemplateLiteral(propertyValue),
+                  };
                 }
               }
             });
