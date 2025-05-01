@@ -55,7 +55,7 @@
     "@mdx-js/mdx": "^3.1.0",
     "@types/dedent": "^0.7.2",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.15.2",
+    "@types/node": "^22.15.3",
     "@types/parse-srcset": "^1.0.0",
     "@types/react-dom": "^18.3.7",
     "dedent": "^1.5.3",
@@ -76,7 +76,7 @@
     "ts-jest": "^29.3.2",
     "type-coverage": "^2.29.7",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.0",
+    "typescript-eslint": "^8.31.1",
     "unified": "^11.0.5",
     "unist-util-remove-position": "^5.0.0"
   },
