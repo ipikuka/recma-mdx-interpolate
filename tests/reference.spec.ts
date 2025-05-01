@@ -1,4 +1,4 @@
-import { compile } from "@mdx-js/mdx";
+import { compile, type CompileOptions } from "@mdx-js/mdx";
 import { visit } from "unist-util-visit";
 import dedent from "dedent";
 import { fromMarkdown } from "mdast-util-from-markdown";
@@ -10,10 +10,10 @@ function removeEstreeMeta(node: unknown): void {
   if (node && typeof node === "object") {
     const obj = node as Record<string, unknown>;
 
-    delete (obj as any).loc;
-    delete (obj as any).range;
-    delete (obj as any).start;
-    delete (obj as any).end;
+    if ("loc" in obj) delete obj.loc;
+    if ("range" in obj) delete obj.range;
+    if ("start" in obj) delete obj.start;
+    if ("end" in obj) delete obj.end;
 
     for (const key in obj) {
       removeEstreeMeta(obj[key]);
@@ -21,27 +21,27 @@ function removeEstreeMeta(node: unknown): void {
   }
 }
 
-const getCompiled = async (source: string, options: {}) => {
+const getCompiled = async (source: string, options: CompileOptions) => {
   return String(await compile(source, options));
 };
 
 describe("recma-mdx-interpolate, debug", () => {
-  it("log esast via custom plugin", async () => {
-    const source = dedent`
-      [{props.email}]({props.email} "{props.title}")
-    `;
+  // it("log esast via custom plugin", async () => {
+  //   const source = dedent`
+  //     [{props.email}]({props.email} "{props.title}")
+  //   `;
 
-    await compile(source, {
-      format: "mdx",
-      recmaPlugins: [
-        function recmaLogTree() {
-          return function (tree) {
-            console.dir(tree, { depth: null });
-          };
-        },
-      ],
-    });
-  });
+  //   await compile(source, {
+  //     format: "mdx",
+  //     recmaPlugins: [
+  //       function recmaLogTree() {
+  //         return function (tree) {
+  //           console.dir(tree, { depth: null });
+  //         };
+  //       },
+  //     ],
+  //   });
+  // });
 
   it("see the mdast via mdast-util-from-markdown", async () => {
     const source = dedent`
