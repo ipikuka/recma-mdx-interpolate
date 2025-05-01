@@ -74,16 +74,23 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
       let objectExpression: ObjectExpression | undefined;
       let currentTag: TargetTag | undefined;
 
-      if (
-        firstArgument.type === "Literal" &&
-        typeof firstArgument.value === "string" &&
-        targetTags.includes(firstArgument.value.toLowerCase())
-      ) {
-        if (secondArgument.type === "ObjectExpression") {
-          objectExpression = secondArgument;
-          currentTag = firstArgument.value as TargetTag;
-        }
-      }
+      /**
+       * intentionally commented out, for jsx, jsxs, jsxDev automatic runtime output
+       *
+       * only mdxjsx elements are Identifier in call expressions (not MemberExpression)
+       * so, we can skip them, because mdx-parser already makes interpolation happen in that nodes!
+       *
+       */
+      // if (
+      //   firstArgument.type === "Literal" &&
+      //   typeof firstArgument.value === "string" &&
+      //   targetTags.includes(firstArgument.value.toLowerCase())
+      // ) {
+      //   if (secondArgument.type === "ObjectExpression") {
+      //     objectExpression = secondArgument;
+      //     currentTag = firstArgument.value as TargetTag;
+      //   }
+      // }
 
       if (firstArgument.type === "MemberExpression") {
         if (
@@ -159,14 +166,15 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
           currentTag = jsxMemberExpression.property.name as TargetTag;
         }
       }
+
       /**
-       * intentionally commented out
+       * intentionally commented out, for JSX output
        *
        * only mdxjsx elements have JSXIdentifier tag name (not JSXMemberExpression)
        * so, we can skip them, because mdx-parser already makes interpolation happen in that nodes!
        *
        */
-      // else if (node.openingElement.name.type === "JSXIdentifier") {
+      // if (node.openingElement.name.type === "JSXIdentifier") {
       //   const jsxIdentifier = node.openingElement.name;
 
       //   if (targetTags.includes(jsxIdentifier.name.toLowerCase())) {
