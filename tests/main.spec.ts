@@ -571,7 +571,6 @@ describe("recma-mdx-interpolate, images 3", () => {
   });
 });
 
-// TODO: mention in the README about html as well
 describe("recma-mdx-interpolate, html", () => {
   const source = dedent`
     <a href={href} title={title}>{text}</a>

@@ -105,6 +105,23 @@ Here are some explanations I should emphasise:
 
 *Note `*`: works with a workaround only.*
 
+### `recma-mdx-interpolate` supports html in markdown
+
+**It supports html syntax besides** markdown syntax for **link** and **image** in markdown contents. In MDX, the plugin doesn't touch these html syntax (actually MdxJsx elements) due to mdx parser handles interpolations already. 
+
+```markdown
+<a href={link.href} title={link.title}>{link.text}</a>
+<img src={image.src} alt={image.alt} title={image.title}>
+```
+
+As you pay attention, there is no self-closing slash in `<img>` element above. Because there is no need self-closing slash for self-closable html elements in markdown (`md`) format, and of course in HTML5 standard. But, if you want to put a self-closing slash, put a space before it. Otherwise, the plugin infers that the self-closing slash belongs to the last attribute value, and produce unneccesary "/" in the value of the last attribute.
+
+```markdown
+<img src={image.src} alt={image.alt} title={image.title}>  it is okey
+<img src={image.src} alt={image.alt} title={image.title} /> it is okey
+<img src={image.src} alt={image.alt} title={image.title}/> it is okey but the plugin infers "/" belongs the title.
+```
+
 ## Installation
 
 This package is suitable for ESM only. In Node.js (version 18+), install with npm:
@@ -321,7 +338,7 @@ I like to contribute the Unified / Remark / MDX ecosystem, so I recommend you to
 [badge-typescript]: https://img.shields.io/npm/types/recma-mdx-interpolate
 [url-typescript]: https://www.typescriptlang.org/
 
-[badge-codecov]: https://codecov.io/gh/ipikuka/recma-mdx-interpolate/graph/badge.svg?token=TODO
+[badge-codecov]: https://codecov.io/gh/ipikuka/recma-mdx-interpolate/graph/badge.svg?token=f5Vlb1riGO
 [url-codecov]: https://codecov.io/gh/ipikuka/recma-mdx-interpolate
 
 [badge-type-coverage]: https://img.shields.io/badge/dynamic/json.svg?label=type-coverage&prefix=%E2%89%A5&suffix=%&query=$.typeCoverage.atLeast&uri=https%3A%2F%2Fraw.githubusercontent.com%2Fipikuka%2Frecma-mdx-interpolate%2Fmaster%2Fpackage.json

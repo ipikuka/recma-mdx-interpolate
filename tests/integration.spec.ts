@@ -105,7 +105,6 @@ describe("recma-mdx-interpolate, HTML input", () => {
   };
 
   /**
-   * TODO: mention in the README
    * the trailing slash in the title of images in the results come from self-closing slash in <img>
    * I've kept the tests as-is to see this behavior
    * actually, no need self-closing slash in markdown, or put a space before the self-closing slash
