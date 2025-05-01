@@ -133,9 +133,8 @@ describe("recma-mdx-interpolate, HTML input", () => {
   });
 
   /**
-   * TODO: how to prevent from visiting mdxjsx elements already interpolated
-   * when the format is mdx, the plugin visits the nodes, but does nothing,
-   * since it couldn't find any interpolation, why? mdx parser already handles interpolations
+   * when the format is mdx, the plugin is something effectless !
+   * mdx-parser already handles interpolations in mdx
    * see the proofs ---> "ecxlude" and "disable" options
    */
   it("no need handling MdxJsx elements in MDX", async () => {

@@ -320,3 +320,48 @@ describe("recma-mdx-interpolate, images 3", () => {
     `);
   });
 });
+
+describe("recma-mdx-interpolate, html", () => {
+  const source = dedent`
+    <a href={href} title={title}>{text}</a>
+    <img src={src} alt={alt} title={title} />
+  `;
+
+  // ******************************************
+  it("handle html inputs, simple variables", async () => {
+    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+      "/*@jsxRuntime automatic*/
+      /*@jsxImportSource react*/
+      function _createMdxContent(props) {
+        const _components = {
+          a: "a",
+          img: "img",
+          p: "p",
+          ...props.components
+        };
+        return <_components.p><_components.a href={href} title={title}>{text}</_components.a>{"\\n"}<_components.img src={src} alt={alt} title={title} /></_components.p>;
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? <MDXLayout {...props}><_createMdxContent {...props} /></MDXLayout> : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+
+  // ******************************************
+  it("handle html inputs, simple variables, format mdx", async () => {
+    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+      "/*@jsxRuntime automatic*/
+      /*@jsxImportSource react*/
+      function _createMdxContent(props) {
+        return <><a href={href} title={title}>{text}</a>{"\\n"}<img src={src} alt={alt} title={title} /></>;
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? <MDXLayout {...props}><_createMdxContent {...props} /></MDXLayout> : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+});
