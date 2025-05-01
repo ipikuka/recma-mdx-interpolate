@@ -644,3 +644,76 @@ describe("recma-mdx-interpolate, html", () => {
     `);
   });
 });
+
+describe("recma-mdx-interpolate, html 2", () => {
+  const source = dedent`
+    <a href={link.href} title={link.title}>{link.text}</a>
+    <img src={image.src} alt={image.alt} title={image.title} />
+  `;
+
+  // ******************************************
+  it("handle html inputs, object path", async () => {
+    expect(await compile(source, { format: "md" })).toMatchInlineSnapshot(`
+      "import {jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
+      function _createMdxContent(props) {
+        const _components = {
+          a: "a",
+          img: "img",
+          p: "p",
+          ...props.components
+        };
+        return _jsxs(_components.p, {
+          children: [_jsx(_components.a, {
+            href: link.href,
+            title: link.title,
+            children: link.text
+          }), "\\n", _jsx(_components.img, {
+            src: image.src,
+            alt: image.alt,
+            title: image.title
+          })]
+        });
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? _jsx(MDXLayout, {
+          ...props,
+          children: _jsx(_createMdxContent, {
+            ...props
+          })
+        }) : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+
+  // ******************************************
+  it("handle html inputs, object path, format mdx", async () => {
+    expect(await compile(source)).toMatchInlineSnapshot(`
+      "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
+      function _createMdxContent(props) {
+        return _jsxs(_Fragment, {
+          children: [_jsx("a", {
+            href: link.href,
+            title: link.title,
+            children: link.text
+          }), "\\n", _jsx("img", {
+            src: image.src,
+            alt: image.alt,
+            title: image.title
+          })]
+        });
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? _jsx(MDXLayout, {
+          ...props,
+          children: _jsx(_createMdxContent, {
+            ...props
+          })
+        }) : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+});
