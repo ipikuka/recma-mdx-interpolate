@@ -109,6 +109,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
         const properties = objectExpression.properties
           .filter((property) => property.type === "Property")
           .filter((property) => {
+            /* istanbul ignore next */
             if (property.key.type !== "Identifier") return false;
             const propertyName = property.key.name.toLowerCase();
             return filterNameAllowOrExlude(propertyName, allowedTag, excludedTag);
@@ -157,14 +158,22 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
           openingElement = node.openingElement;
           currentTag = jsxMemberExpression.property.name as TargetTag;
         }
-      } else if (node.openingElement.name.type === "JSXIdentifier") {
-        const jsxIdentifier = node.openingElement.name;
-
-        if (targetTags.includes(jsxIdentifier.name.toLowerCase())) {
-          openingElement = node.openingElement;
-          currentTag = jsxIdentifier.name as TargetTag;
-        }
       }
+      /**
+       * intentionally commented out
+       *
+       * only mdxjsx elements have JSXIdentifier tag name (not JSXMemberExpression)
+       * so, we can skip them, because mdx-parser already makes interpolation happen in that nodes!
+       *
+       */
+      // else if (node.openingElement.name.type === "JSXIdentifier") {
+      //   const jsxIdentifier = node.openingElement.name;
+
+      //   if (targetTags.includes(jsxIdentifier.name.toLowerCase())) {
+      //     openingElement = node.openingElement;
+      //     currentTag = jsxIdentifier.name as TargetTag;
+      //   }
+      // }
 
       if (openingElement && currentTag) {
         const allowedTag = MapOfTargetTagAttributes[currentTag];
@@ -173,6 +182,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
         const jsxAttributes = openingElement.attributes
           .filter((attr) => attr.type === "JSXAttribute")
           .filter((attr) => {
+            /* istanbul ignore next */
             if (attr.name.type !== "JSXIdentifier") return false;
             const attrName = attr.name.name.toLowerCase();
             return filterNameAllowOrExlude(attrName, allowedTag, excludedTag);
