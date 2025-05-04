@@ -88,6 +88,35 @@ describe("recma-mdx-interpolate, markdown input", () => {
     expect(await prettier.format(htmlMd, { parser: "html" })).toMatchInlineSnapshot(expected);
     expect(await prettier.format(htmlMdx, { parser: "html" })).toMatchInlineSnapshot(expected);
   });
+
+  // ******************************************
+  it("handle inside other elements", async () => {
+    const scope = {
+      metadata: { path: "https://example.com", text: "anchor text" },
+      image: { path: "/image.png", alt: "image alt" },
+    };
+
+    const output = `
+      "<h1><a href="https://example.com">anchor text</a></h1>
+      <blockquote>
+      <p>blockquote <img src="/image.png" alt="image alt"/></p>
+      </blockquote>"
+    `;
+
+    const sourceMd = dedent`
+      # [{metadata.text}]({metadata.path})
+      > blockquote ![{image.alt}]({image.path})
+    `;
+
+    expect(await processMd(sourceMd, { scope })).toMatchInlineSnapshot(output);
+
+    const sourceMdx = dedent`
+      # [{metadata.text}]({metadata.path})
+      > blockquote ![{{x:image.alt}}]({image.path})
+    `;
+
+    expect(await processMdx(sourceMdx, { scope })).toMatchInlineSnapshot(output);
+  });
 });
 
 describe("recma-mdx-interpolate, HTML input", () => {
