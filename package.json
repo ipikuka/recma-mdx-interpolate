@@ -69,7 +69,6 @@
     "micromark-extension-mdxjs": "^3.0.0",
     "next-mdx-remote-client": "^1.1.1",
     "prettier": "^3.5.3",
-    "prettier-2": "npm:prettier@^2.8.8",
     "react-dom": "^18.3.1",
     "rehype-raw": "^7.0.0",
     "rimraf": "^5.0.10",
