@@ -2,7 +2,6 @@
 module.exports = {
   preset: "ts-jest/presets/default-esm-legacy",
   testEnvironment: "node",
-  prettierPath: require.resolve("prettier-2"),
   collectCoverageFrom: ["src/index.ts"],
   coverageReporters: ["json", "lcov", "text"],
   coverageThreshold: {
