@@ -81,7 +81,7 @@
     "unist-util-remove-position": "^5.0.0"
   },
   "dependencies": {
-    "@types/estree": "^1.0.7",
+    "@types/estree": "^1.0.8",
     "@types/estree-jsx": "^1.0.5",
     "estree-util-visit": "^2.0.0"
   },
