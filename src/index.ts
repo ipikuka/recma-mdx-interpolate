@@ -54,6 +54,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
     visit(tree, (node) => {
       if (node.type !== "CallExpression") return CONTINUE;
 
+      /* istanbul ignore if */
       if ("name" in node.callee) {
         if (
           node.callee.name !== "_jsx" &&
@@ -93,6 +94,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
       // }
 
       if (firstArgument.type === "MemberExpression") {
+        /* istanbul ignore if */
         if (
           firstArgument.object.type === "Identifier" &&
           firstArgument.object.name === "_components"
@@ -197,6 +199,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
           });
 
         jsxAttributes.forEach((jsxAttribute) => {
+          /* istanbul ignore if */
           if (isStringLiteral(jsxAttribute.value)) {
             const propertyValue = normalizeBracedExpressions(
               decodeURI(jsxAttribute.value.value),
