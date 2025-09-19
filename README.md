@@ -18,26 +18,26 @@ Normally, interpolation of an identifier (*identifiers wrapped with curly braces
 
 MDX expressions in some places is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
 
-**If your integration supports "md" format,** like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then `recma-mdx-interpolate` can be used for "md" format as well.
+**If your integration supports "md" format,** like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then **`recma-mdx-interpolate`** can be used for "md" format as well.
 
 ### Considerations for Markdown Link Syntax
 Syntax: `[text part](href part "title part")`
 
-**Href part** of a markdown link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
+**Href part** of a markdown link is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, **`recma-mdx-interpolate`** handles that part.
 
-**Title part** of a markdown link remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
+**Title part** of a markdown link remains as-is. The interpolation doesn't work by default. So, **`recma-mdx-interpolate`** handles that part as well.
 
-**Text part** of a markdown link is parsed as inline markdown, which means it can be broken into child nodes like `strong`, `emphasis`, `inlineCode`, or plain text. In MDX, these nodes support interpolation by default, so `recma-mdx-interpolate` doesn’t need to handle them. In plain markdown (`md`), although the text is also parsed into children, those nodes do not support interpolation by default, so `recma-mdx-interpolate` takes care of it.
+**Text part** of a markdown link is parsed as inline markdown, which means it can be broken into child nodes like `strong`, `emphasis`, `inlineCode`, or plain text. In MDX, these nodes support interpolation by default, so **`recma-mdx-interpolate`** doesn’t need to handle them. In plain markdown (`md`), although the text is also parsed into children, those nodes do not support interpolation by default, so **`recma-mdx-interpolate`** takes care of it.
 
 ### Considerations for Markdown Image Syntax
 Syntax: `![alt part](src part "title part")`
 
-**Src part** of a markdown image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part.
+**Src part** of a markdown image is URI encoded, meaningly curly braces are encoded as `%7B` and `%7D`. The interpolation doesn't work by default. So, **`recma-mdx-interpolate`** handles that part.
 
-**Title part** of a markdown image remains as-is. The interpolation doesn't work by default. So, `recma-mdx-interpolate` handles that part as well.
+**Title part** of a markdown image remains as-is. The interpolation doesn't work by default. So, **`recma-mdx-interpolate`** handles that part as well.
 
 **Alt part** of a markdown image behaves differently in MDX compared to standard markdown:
-- In **markdown**, the alt text is treated as plain text, and curly braces `{}` are preserved; so `recma-mdx-interpolate` handles the interpolation.
+- In **markdown**, the alt text is treated as plain text, and curly braces `{}` are preserved; so **`recma-mdx-interpolate`** handles the interpolation.
 - In **MDX**, however, curly braces are **automatically stripped** from the alt text. This means standard interpolation like `![{alt}](image.png)` doesn't work — there's no way to detect the interpolation syntax after MDX parsing. Since curly braces are stripped, we need to find a workaround for MDX.
 
 #### Workaround for Interpolation in `alt` part of markdown image in MDX
@@ -57,7 +57,7 @@ For `object paths` (e.g., `image.alt`, `props.image.alt`), double curly braces a
 ![{{_:image.alt}}](image.png)
 ![{{alt:props.image.alt}}](image.png)
 ```
-This format is recognized and handled by the `recma-mdx-interpolate` plugin.
+This format is recognized and handled by the **`recma-mdx-interpolate`** plugin.
 
 > **Note:** The colon **`:`** is essential — other separators (like `@`, `-`, or `%`) do not work.
 
@@ -262,7 +262,7 @@ This plugin works with `unified` version 6+. It is compatible with `mdx` version
 
 ## Security
 
-Use of `recma-mdx-interpolate` does not involve user content so there are no openings for cross-site scripting (XSS) attacks.
+Use of **`recma-mdx-interpolate`** does not involve user content so there are no openings for cross-site scripting (XSS) attacks.
 
 ## My Plugins
 
