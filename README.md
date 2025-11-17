@@ -65,7 +65,7 @@ For `object paths` (e.g., `image.alt`, `props.image.alt`), double curly braces a
 ![{{_:image.alt}}](image.png)
 ![{{alt:props.image.alt}}](image.png)
 ```
-This format is recognized and handled by the **`recma-mdx-interpolate`** plugin.
+This format is recognized and handled by **`recma-mdx-interpolate`** plugin.
 
 > **Note:** The colon **`:`** is essential — other separators (like `@`, `-`, or `%`) do not work.
 
