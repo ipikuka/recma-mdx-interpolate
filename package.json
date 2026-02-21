@@ -17,13 +17,15 @@
     "format": "npm run prettier && npm run lint",
     "prettier": "prettier --write .",
     "lint": "eslint .",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs --coverage",
-    "test:main": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs main.spec.ts --watch",
-    "test:jsx": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs main.jsx.spec.ts --watch",
-    "test:i11": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs integration.spec.ts --watch",
-    "test:ref": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs reference.spec.ts --watch",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs",
+    "test:watch": "npm run test -- --watch",
+    "test:main": "npm run test:watch -- main.spec.ts",
+    "test:jsx": "npm run test:watch -- main.jsx.spec.ts",
+    "test:integration": "npm run test:watch -- integration.spec.ts",
+    "test:reference": "npm run test:watch -- reference.spec.ts",
+    "test-coverage": "npm run test -- --coverage",
     "prepack": "npm run build",
-    "prepublishOnly": "npm test && npm run format"
+    "prepublishOnly": "npm run format && npm run test-coverage"
   },
   "files": [
     "dist/",
