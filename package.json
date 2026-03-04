@@ -21,6 +21,7 @@
     "test:watch": "npm run test -- --watch",
     "test:main": "npm run test:watch -- main.spec.ts",
     "test:jsx": "npm run test:watch -- main.jsx.spec.ts",
+    "test:code": "npm run test -- main.code.spec.ts",
     "test:integration": "npm run test:watch -- integration.spec.ts",
     "test:reference": "npm run test:watch -- reference.spec.ts",
     "test-coverage": "npm run test -- --coverage",
@@ -85,6 +86,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.0",
     "unified": "^11.0.5",
+    "unist-plugin-log-tree": "^1.0.2",
     "unist-util-remove-position": "^5.0.0"
   },
   "dependencies": {
