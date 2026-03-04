@@ -1,6 +1,6 @@
 import dedent from "dedent";
 
-import { compileJsx } from "./util";
+import { compile } from "./util";
 
 describe("recma-mdx-interpolate, links 1", () => {
   const source = dedent`
@@ -11,7 +11,7 @@ describe("recma-mdx-interpolate, links 1", () => {
 
   // ******************************************
   it("handle interpolation", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -32,7 +32,7 @@ describe("recma-mdx-interpolate, links 1", () => {
 
   // ******************************************
   it("handle interpolation, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -63,7 +63,7 @@ describe("recma-mdx-interpolate, links 2", () => {
 
   // ******************************************
   it("handle template literals in links", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -86,7 +86,7 @@ describe("recma-mdx-interpolate, links 2", () => {
 
   // ******************************************
   it("handle template literals in links, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -114,7 +114,7 @@ describe("recma-mdx-interpolate, links 3", () => {
 
   it("handle deeply nested interpolations", async () => {
     // ******************************************
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -138,7 +138,7 @@ describe("recma-mdx-interpolate, links 3", () => {
 
   // ******************************************
   it("handle deeply nested interpolations, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -174,7 +174,7 @@ describe("recma-mdx-interpolate, images 1", () => {
       ![{{_:x.y.z}}]({a.b} "{t.t}")
     `;
 
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -203,7 +203,7 @@ describe("recma-mdx-interpolate, images 1", () => {
       ![{{_:x.y.z}}]({a.b} "{t.t}")
     `;
 
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -231,7 +231,7 @@ describe("recma-mdx-interpolate, images 2", () => {
 
   // ******************************************
   it("handle workaround", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -252,7 +252,7 @@ describe("recma-mdx-interpolate, images 2", () => {
 
   // ******************************************
   it("handle workaround, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -280,7 +280,7 @@ describe("recma-mdx-interpolate, images 3", () => {
 
   // ******************************************
   it("handle template literals in images", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -301,7 +301,7 @@ describe("recma-mdx-interpolate, images 3", () => {
 
   // ******************************************
   it("handle template literals in images, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -329,7 +329,7 @@ describe("recma-mdx-interpolate, html", () => {
 
   // ******************************************
   it("handle html inputs, simple variables", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -351,7 +351,7 @@ describe("recma-mdx-interpolate, html", () => {
 
   // ******************************************
   it("handle html inputs, simple variables, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -374,7 +374,7 @@ describe("recma-mdx-interpolate, html 2", () => {
 
   // ******************************************
   it("handle html inputs, object path", async () => {
-    expect(await compileJsx(source, { format: "md" })).toMatchInlineSnapshot(`
+    expect(await compile(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -396,7 +396,7 @@ describe("recma-mdx-interpolate, html 2", () => {
 
   // ******************************************
   it("handle html inputs, object path, format mdx", async () => {
-    expect(await compileJsx(source)).toMatchInlineSnapshot(`
+    expect(await compile(source, { jsx: true })).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
