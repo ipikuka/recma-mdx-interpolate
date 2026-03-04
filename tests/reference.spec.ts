@@ -1,11 +1,12 @@
-import { compile, type CompileOptions } from "@mdx-js/mdx";
+import { compile } from "@mdx-js/mdx";
 import { visit } from "unist-util-visit";
-import dedent from "dedent";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { removePosition } from "unist-util-remove-position";
 import { mdxjs } from "micromark-extension-mdxjs";
 import { mdxFromMarkdown } from "mdast-util-mdx";
+import dedent from "dedent";
 
+// A utility function to recursively remove estree meta info from a node
 function removeEstreeMeta(node: unknown): void {
   if (node && typeof node === "object") {
     const obj = node as Record<string, unknown>;
@@ -21,37 +22,17 @@ function removeEstreeMeta(node: unknown): void {
   }
 }
 
-const getCompiled = async (source: string, options: CompileOptions) => {
-  return String(await compile(source, options));
-};
-
 describe("recma-mdx-interpolate, debug", () => {
-  // it("log esast via custom plugin", async () => {
-  //   const source = dedent`
-  //     [{props.email}]({props.email} "{props.title}")
-  //   `;
+  const source = dedent`
+    [*{text}*]({href} "*{title}*") ![*{alt}*]({src} "*{title}*")
+  `;
 
-  //   await compile(source, {
-  //     format: "mdx",
-  //     recmaPlugins: [
-  //       function recmaLogTree() {
-  //         return function (tree) {
-  //           console.dir(tree, { depth: null });
-  //         };
-  //       },
-  //     ],
-  //   });
-  // });
+  // ******************************************
+  it("see mdast, format md", async () => {
+    const tree = fromMarkdown(source);
+    removePosition(tree, { force: true });
 
-  it("see the mdast via mdast-util-from-markdown", async () => {
-    const source = dedent`
-      [*{text}*]({href} "*{title}*") ![*{alt}*]({src} "*{title}*")
-    `;
-
-    const tree1 = fromMarkdown(source);
-    removePosition(tree1, { force: true });
-
-    expect(tree1).toMatchInlineSnapshot(`
+    expect(tree).toMatchInlineSnapshot(`
       {
         "children": [
           {
@@ -89,22 +70,25 @@ describe("recma-mdx-interpolate, debug", () => {
         "type": "root",
       }
     `);
+  });
 
-    const tree2 = fromMarkdown(source, {
+  // ******************************************
+  it("see mdast, format mdx", async () => {
+    const tree = fromMarkdown(source, {
       extensions: [mdxjs()],
       mdastExtensions: [mdxFromMarkdown()],
     });
 
-    removePosition(tree2, { force: true });
+    removePosition(tree, { force: true });
 
-    // Clean estree recursively
-    visit(tree2, (node) => {
-      if (node.type === "mdxTextExpression" && node.data?.estree) {
+    // Clean estree meta info ---> "range", "loc", "start", "end"
+    visit(tree, (node) => {
+      if (node.data && "estree" in node.data) {
         removeEstreeMeta(node.data.estree);
       }
     });
 
-    expect(tree2).toMatchInlineSnapshot(`
+    expect(tree).toMatchInlineSnapshot(`
       {
         "children": [
           {
@@ -172,7 +156,13 @@ describe("recma-mdx-interpolate, basic interpolation", () => {
       ![{{double}}]({src} "{title}")
     `;
 
-    expect(await getCompiled(source, { format: "md" })).toMatchInlineSnapshot(`
+    // test it with different options
+    // { format: "md" }
+    // { format: "mdx" }
+    // { format: "md", jsx: true }
+    // { format: "mdx", jsx: true }
+
+    expect(String(await compile(source, { format: "md" }))).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
         const _components = {
@@ -215,7 +205,7 @@ describe("recma-mdx-interpolate, basic interpolation", () => {
       "
     `);
 
-    expect(await getCompiled(source, { format: "mdx" })).toMatchInlineSnapshot(`
+    expect(String(await compile(source, { format: "mdx" }))).toMatchInlineSnapshot(`
       "import {Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
       function _createMdxContent(props) {
         const _components = {
@@ -258,7 +248,7 @@ describe("recma-mdx-interpolate, basic interpolation", () => {
       "
     `);
 
-    expect(await getCompiled(source, { format: "md", jsx: true })).toMatchInlineSnapshot(`
+    expect(String(await compile(source, { format: "md", jsx: true }))).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
@@ -277,7 +267,7 @@ describe("recma-mdx-interpolate, basic interpolation", () => {
       "
     `);
 
-    expect(await getCompiled(source, { format: "mdx", jsx: true })).toMatchInlineSnapshot(`
+    expect(String(await compile(source, { format: "mdx", jsx: true }))).toMatchInlineSnapshot(`
       "/*@jsxRuntime automatic*/
       /*@jsxImportSource react*/
       function _createMdxContent(props) {
