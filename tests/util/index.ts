@@ -8,7 +8,13 @@ export const compile = async (
   source: string,
   options?: CompileOptions & InterpolateOptions,
 ) => {
-  const { exclude = {}, disable = false, format = "mdx", ...rest } = options ?? {};
+  const {
+    exclude = {},
+    disable = false,
+    interpolationSyntaxForCodeFence = "{{",
+    format = "mdx",
+    ...rest
+  } = options ?? {};
 
   return String(
     await compileOriginal(source, {
@@ -16,10 +22,15 @@ export const compile = async (
       ...rest,
       rehypePlugins: format === "md" ? [rehypeRaw] : undefined,
       recmaPlugins: [
-        [recmaMdxInterpolate, { exclude, disable }],
+        [recmaMdxInterpolate, { exclude, disable, interpolationSyntaxForCodeFence }],
         logTree({
           excludeKeys: ["position", "range", "loc", "start", "end"],
           enabled: false,
+          // preserveSubtree: true,
+          // test: (node) => {
+          //   // only log code elements
+          //   return "arguments" in node && node.arguments[0].property?.name === "code";
+          // },
         }),
       ],
     }),

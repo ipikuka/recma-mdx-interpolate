@@ -12,7 +12,7 @@ export const processMd = async (
   const { scope, ...rest } = options ?? {};
   const format = "md";
 
-  const { content } = await evaluate({
+  const { content, error } = await evaluate({
     source: input,
     options: {
       scope,
@@ -23,6 +23,8 @@ export const processMd = async (
       },
     },
   });
+
+  if (error) throw error;
 
   return ReactDOMServer.renderToStaticMarkup(content);
 };
@@ -45,7 +47,7 @@ export const processMdx = async (
     },
   });
 
-  if (error) console.log(error);
+  if (error) throw error;
 
   return ReactDOMServer.renderToStaticMarkup(content);
 };
