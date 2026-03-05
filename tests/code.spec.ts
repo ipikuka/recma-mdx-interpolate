@@ -1,0 +1,101 @@
+import dedent from "dedent";
+
+import { compile } from "./util";
+
+describe("recma-mdx-interpolate, code fences with default syntax", () => {
+  const source = dedent`
+    \`\`\`bash
+    pnpm add {{loader}}@{{props.version}}
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, format md", async () => {
+    expect(await compile(source, { format: "md" })).toContain(`
+      children: ["pnpm add ", loader, "@", props.version, "\\n"]
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, format mdx", async () => {
+    expect(await compile(source, { format: "mdx" })).toContain(`
+      children: ["pnpm add ", loader, "@", props.version, "\\n"]
+    `);
+  });
+});
+
+describe("recma-mdx-interpolate, code fences with custom syntax", () => {
+  const source = dedent`
+    \`\`\`bash
+    pnpm add <<:loader:>>@<<:props.version:>>
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, format md", async () => {
+    expect(
+      await compile(source, {
+        format: "md",
+        interpolationSyntaxForCodeFence: "<<:",
+      }),
+    ).toContain(`
+      children: ["pnpm add ", loader, "@", props.version, "\\n"]
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, format mdx", async () => {
+    expect(
+      await compile(source, {
+        format: "mdx",
+        interpolationSyntaxForCodeFence: "<<:",
+      }),
+    ).toContain(`
+      children: ["pnpm add ", loader, "@", props.version, "\\n"]
+    `);
+  });
+});
+
+describe("recma-mdx-interpolate, supports interpolation with dashes", () => {
+  const source = dedent`
+    \`\`\`bash
+    pnpm add {{ _my-loader }}@{{ props.version-name }}
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, format md", async () => {
+    expect(await compile(source, { format: "md" })).toContain(`
+      children: ["pnpm add ", _my-loader, "@", props["version-name"], "\\n"]
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, format mdx", async () => {
+    expect(await compile(source, { format: "mdx" })).toContain(`
+      children: ["pnpm add ", _my-loader, "@", props["version-name"], "\\n"]
+    `);
+  });
+});
+
+describe("recma-mdx-interpolate, disable interpolation in code fences", () => {
+  const source = dedent`
+    \`\`\`bash
+    pnpm add {{loader}}@{{props.version}}
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, format md", async () => {
+    expect(await compile(source, { format: "md", exclude: { code: true } })).toContain(`
+      children: \"pnpm add {{loader}}@{{props.version}}\\n\"
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, format mdx", async () => {
+    expect(await compile(source, { format: "mdx", exclude: { code: true } })).toContain(`
+      children: \"pnpm add {{loader}}@{{props.version}}\\n\"
+    `);
+  });
+});
