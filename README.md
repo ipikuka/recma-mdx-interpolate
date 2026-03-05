@@ -22,7 +22,7 @@ Thank you for supporting open source! 🙌
 [![typescript][badge-typescript]][url-typescript]
 [![license][badge-license]][url-license]
 
-This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enables interpolation of identifiers wrapped in curly braces within the `alt`, `src`, `href`, and `title` attributes of markdown link and image syntax in MDX**.
+This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enables interpolation of identifiers wrapped in curly braces within the `alt`, `src`, `href`, and `title` attributes of markdown link and image syntax; and wrapped in special syntax within markdown code fences in MDX/markdown**.
 
 **[unified][unified]** is a project that transforms content with abstract syntax trees (ASTs) using the new parser **[micromark][micromark]**. **[recma][recma]** adds support for producing a javascript code by transforming **[esast][esast]** which stands for Ecma Script Abstract Syntax Tree (AST) that is used in production of compiled source for the **[MDX][MDX]**.
 
@@ -30,7 +30,7 @@ This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enab
 
 Normally, interpolation of an identifier (*identifiers wrapped with curly braces, for example `{name}` or `{props.src}`*) within markdown content doesn't work. **The interpolation of an identifier, in other words MDX expressions, is a matter of MDX.**
 
-MDX expressions in some places is not viable since MDX is not a template language. For example, MDX expressions within markdown **link** and **image** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
+MDX expressions in some places is not viable since MDX is not a template language. For example, MDX expressions within markdown **link**, **image** and **code fence** syntax doesn't work in MDX. **`recma-mdx-interpolate`** patches that gaps !
 
 **If your integration supports "md" format,** like (`@mdx-js/mdx`, `next-mdx-remote-client` etc.), then **`recma-mdx-interpolate`** can be used for "md" format as well.
 
@@ -85,7 +85,25 @@ This format is recognized and handled by **`recma-mdx-interpolate`** plugin.
 
 This is a weird workaround, but nothing to do else due to internal MDX parsing, and the double-curly-braces-and-colon-based workaround is the only known reliable method after extensive testing. The workaround is for MDX, not for markdown in which curly braces are not removed.
 
+### Considerations for Markdown Code Fence Syntax
+
+**`recma-mdx-interpolation`** supports interpolation in code fence children (the content of ```....``` blocks). By default, code fence interpolation uses double curly braces `{{}}`:
+
+````markdown
+```bash
+pnpm add @mdx-js/loader@{{ props.version-name }}
+```
+````
+
+However, if your code fence language already uses **`{{}}`** syntax, you can customize the interpolation syntax using the **`interpolationSyntaxForCodeFence`** option to avoid conflicts. See the [interpolationSyntaxForCodeFence](#interpolationsyntaxforcodefence) option for details.
+
+**Important:** Code fence interpolation behaves differently from interpolation in other attributes:
++ **Code fences:** Use configurable syntax (default **`{{}}`**)
++ **Other attributes (href, src, alt, title):** Use single curly braces **`{}`** (cannot be customized)
+
 ## When should I use this?
+
+### markdown images and links
 
 If you want to interpolate identifiers within **alt**, **src**, **href**, and **title** attributes of an **image** and **link** constructed with **markdown syntax**, such as:
 
@@ -104,8 +122,18 @@ Here are some explanations I should emphasise:
 
 + If you are using a plugin (like **[`rehype-image-toolkit`](https://github.com/ipikuka/rehype-image-toolkit)**) to convert image syntax to video/audio, then **`recma-mdx-interpolate`** also supports **src**/**title** of a `<video>`/`<audio>` elements; and **src** of a `<source>` element.
 
+### markdown code fences
+
+If you want to interpolate identifiers within **code fence** constructed with **markdown syntax**, such as:
+
+````markdown
+```bash
+pnpm add @mdx-js/loader@{{props.version}}
+```
+````
+
 > [!IMPORTANT]
-> You should provide the value of identifiers in your integration (usually `props` in `@mdx-js/mdx`; `scope` in `next-mdx-remote-client` and `next-mdx-remote` etc).
+> You should provide the value of identifiers in your integration (via frontmatter; or `props` in `@mdx-js/mdx`; `scope` in `next-mdx-remote-client` and `next-mdx-remote` etc).
 
 ### The list of the tags and attributes that `recma-mdx-interpolate` processes
 
@@ -116,16 +144,21 @@ Here are some explanations I should emphasise:
 | **`<video>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
 | **`<audio>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
 | **`<source>`**   | **`src`**                                      |**`src`**                                      |
+| **`<code>`**     | **`content (children)`**<sup>**</sup>          |**`content (children)`**<sup>**</sup>.         |
 
 *Note `*`: works with a workaround only.*
+*Note `**`: works with a special syntax apart from single curly braces*
 
 ### `recma-mdx-interpolate` supports html in markdown
 
-**It supports html syntax besides** markdown syntax for **link** and **image** in markdown contents. In MDX, the plugin doesn't touch these html syntax (actually MdxJsx elements) due to mdx parser handles interpolations already. 
+**It supports html syntax besides** markdown syntax for **link** and **image** and **code fence** in markdown contents. In MDX, the plugin doesn't touch these html syntax (actually MdxJsx elements) due to mdx parser handles interpolations already.
 
 ```markdown
 <a href={link.href} title={link.title}>{link.text}</a>
 <img src={image.src} alt={image.alt} title={image.title}>
+<pre><code className="language-bash">
+  pnpm add {{name}}@{{node.version}} /* {{node.version-name}} */
+</code></pre>
 ```
 
 As you pay attention, there is no self-closing slash in `<img>` element above. Because there is no need self-closing slash for self-closable html elements in markdown (`md`) format, and of course in HTML5 standard. But, if you want to put a self-closing slash, put a space before it. Otherwise, the plugin infers that the self-closing slash belongs to the last attribute value, and produce unneccesary "/" in the value of the last attribute.
@@ -229,8 +262,9 @@ All options are optional and have default values.
 
 ```typescript
 export type InterpolateOptions = {
-  exclude?: Partial<Record<"a" | "img" | "video" | "audio" | "source", string | string[] | true>>
+  exclude?: Partial<Record<"a" | "img" | "video" | "audio" | "source" | "code", string | string[] | true>>
   disable?: boolean;
+  interpolationSyntaxForCodeFence?: string;
 };
 ```
 
@@ -261,6 +295,45 @@ It could be useful if you want the plugin NOT to work when the format is not "md
 ```javascript
 use(recmaMdxInterpolate, { disable: format !== "mdx" } as InterpolateOptions);
 ```
+
+### interpolationSyntaxForCodeFence
+
+It is a **string** option to customize the interpolation syntax used in code fences only.
+
+Default is `"{{"` (double curly braces).
+
+> **Note:** This option affects **only code fences** (`<code>` elements). For all other attributes (`href`, `src`, `alt`, `title`), the interpolation syntax is single curly braces `{}` and cannot be customized.
+
+**Why use this option?**
+
+Some code fence languages have their own syntax that conflicts with **`{{ }}`**. By setting a different opening syntax, the plugin automatically mirrors it for the closing syntax:
+- `{{` mirrors to `}}`
+- `[[` mirrors to `]]`
+- `<<:` mirrors to `:>>`
+- `{%` mirrors to `%}`
+
+This intelligent mirroring allows flexibility while keeping the configuration simple.
+
+**Examples:**
+
+```javascript
+// Default behavior - uses {{ and }}
+use(recmaMdxInterpolate);
+
+// Custom syntax using angle brackets with colon
+use(recmaMdxInterpolate, { interpolationSyntaxForCodeFence: "<<:" });
+```
+Now you can write in code fences, accordingly:
+
+````markdown
+```bash
+pnpm add @mdx-js/loader@{{props.version}}
+```
+
+```bash
+pnpm add @mdx-js/loader@<<:props.version:>>
+```
+````
 
 ## Syntax tree
 
