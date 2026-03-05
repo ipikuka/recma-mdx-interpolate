@@ -4,13 +4,15 @@ import type { JSXOpeningElement } from "estree-jsx";
 import { CONTINUE, visit } from "estree-util-visit";
 
 import {
+  composeArrayExpression,
   composeTemplateLiteral,
   filterNameAllowOrExlude,
   isStringLiteral,
   normalizeBracedExpressions,
+  getInterpolationRegexForCodeFence,
 } from "./utils.js";
 
-type TargetTag = "a" | "img" | "video" | "audio" | "source";
+type TargetTag = "a" | "img" | "video" | "audio" | "source" | "code";
 
 const MapOfTargetTagAttributes: Record<TargetTag, string | string[] | true> = {
   a: ["children", "href", "title"],
@@ -18,6 +20,7 @@ const MapOfTargetTagAttributes: Record<TargetTag, string | string[] | true> = {
   video: ["src", "title"],
   audio: ["src", "title"],
   source: ["src"],
+  code: ["children"],
 };
 
 export type InterpolateOptions = {
@@ -29,11 +32,30 @@ export type InterpolateOptions = {
    * Disable the plugin (for example when the format is not "mdx")
    */
   disable?: boolean;
+  /**
+   * The syntax for interpolation in code fences,
+   * default is "{{"; the reversed "}}" is implicitly used to close the interpolation.
+   * For example, if you set it to "{{", then opening and closing syntax are both "{{" and "}}", then you can write:
+   * \`\`\`bash
+   * pnpm add @mdx-js/loader@{{props.versions.mdxJsLoader}}
+   * \`\`\`
+   * You can also set it to other values, such as "[[".
+   * \`\`\`bash
+   * pnpm add @mdx-js/loader@[[props.versions.mdxJsLoader]]
+   * \`\`\`
+   * The plugin
+   * will look for the opening syntax (e.g., "{{" or "[[" or "<<:") and,
+   * will use implicitly the closing syntax (e.g., "}}" or "]]" or ":>>") to identify the interpolation expressions in code fences.
+   * This is useful when you want to avoid conflict with language specific syntaxes in code fences.
+   * Note: this option only affects code fences, for other tags (a, img, video, audio, source), the syntax is always { and }.
+   */
+  interpolationSyntaxForCodeFence?: string;
 };
 
 const DEFAULT_SETTINGS: InterpolateOptions = {
   exclude: {},
   disable: false,
+  interpolationSyntaxForCodeFence: "{{",
 };
 
 const targetTags = Object.keys(MapOfTargetTagAttributes);
@@ -126,10 +148,28 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
 
         properties.forEach((property) => {
           if (isStringLiteral(property.value)) {
-            const propertyValue = normalizeBracedExpressions(decodeURI(property.value.value));
+            // special handling for code fences, to allow custom interpolation syntax
+            if (currentTag === "code") {
+              const interpolationRegexForCodeFence = getInterpolationRegexForCodeFence(
+                settings.interpolationSyntaxForCodeFence,
+              );
 
-            if (/\{[^{}]+\}/.test(propertyValue)) {
-              property.value = composeTemplateLiteral(propertyValue);
+              if (interpolationRegexForCodeFence.test(property.value.value)) {
+                const propertyValue = property.value.value.replace(
+                  interpolationRegexForCodeFence,
+                  "{$1}",
+                );
+
+                if (/\{[^{}]+\}/.test(propertyValue)) {
+                  property.value = composeArrayExpression(propertyValue);
+                }
+              }
+            } else {
+              const propertyValue = normalizeBracedExpressions(decodeURI(property.value.value));
+
+              if (/\{[^{}]+\}/.test(propertyValue)) {
+                property.value = composeTemplateLiteral(propertyValue);
+              }
             }
           } else if (property.value.type === "ArrayExpression") {
             visit(property.value, (node) => {
@@ -240,3 +280,79 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
 };
 
 export default plugin;
+
+/*
+
+The plugin basically turns code children from this: 
+
+{
+  type: 'Property',
+  key: {
+    type: 'Identifier',
+    name: 'children'
+  },
+  value: {
+    type: 'Literal',
+    value: 'pnpm add @mdx-js/loader@{{props.versions.mdxJsLoader}}\n'
+  },
+  kind: 'init',
+  method: false,
+  shorthand: false,
+  computed: false
+}
+
+to this:
+
+{
+  type: 'ObjectExpression',
+  properties: [
+    {
+      type: 'Property',
+      key: {
+        type: 'Identifier',
+        name: 'children'
+      },
+      value: {
+        type: 'ArrayExpression',
+        elements: [
+          {
+            type: 'Literal',
+            value: 'pnpm add @mdx-js/loader@'
+          },
+          {
+            type: 'MemberExpression',
+            object: {
+              type: 'MemberExpression',
+              object: {
+                type: 'Identifier',
+                name: 'props'
+              },
+              property: {
+                type: 'Identifier',
+                name: 'versions'
+              },
+              computed: false,
+              optional: false
+            },
+            property: {
+              type: 'Identifier',
+              name: 'mdxJsLoader'
+            },
+            computed: false,
+            optional: false
+          },
+          {
+            type: 'Literal',
+            value: '\n'
+          }
+        ]
+      },
+      kind: 'init',
+      method: false,
+      shorthand: false,
+      computed: false
+    }
+  ]
+}
+
+*/
