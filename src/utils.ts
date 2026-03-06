@@ -61,6 +61,58 @@ function composeMemberExpressionOrIdentifier(value: string): MemberExpression | 
   };
 }
 
+/**
+ * Parses a string with {brackets} and returns an ArrayExpression AST node.
+ */
+export function composeArrayExpression(value: string): ArrayExpression {
+  const elements: Expression[] = [];
+
+  const regex = /\{([^{}]+)\}/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  // If the entire value is just a single expression like "{props.x}"
+  const RegexCurlyBraced = /^\{[^{}]*\}$/;
+  if (RegexCurlyBraced.test(value)) {
+    return {
+      type: "ArrayExpression",
+      elements: [composeMemberExpressionOrIdentifier(value.slice(1, -1))],
+    };
+  }
+
+  while ((match = regex.exec(value)) !== null) {
+    const [whole, expr] = match;
+    const index = match.index;
+
+    // 1. Push preceding static text as a Literal (if not empty)
+    const precedingText = value.slice(lastIndex, index);
+    if (precedingText) {
+      elements.push({ type: "Literal", value: precedingText });
+    }
+
+    // 2. Push the dynamic expression (MemberExpression or Identifier)
+    elements.push(composeMemberExpressionOrIdentifier(expr.trim()));
+
+    lastIndex = index + whole.length;
+  }
+
+  // 3. Push any remaining static text as a Literal
+  const remainingText = value.slice(lastIndex);
+  if (remainingText) {
+    elements.push({ type: "Literal", value: remainingText });
+  }
+
+  return {
+    type: "ArrayExpression",
+    elements,
+  };
+}
+
+/**
+ * Parses a string with {brackets} and returns if,
+ * MemberExpression or Identifier if the entire value is just a single expression
+ * TemplateLiteral if it contains static text mixed with expressions.
+ */
 export function composeTemplateLiteral(
   value: string,
 ): TemplateLiteral | MemberExpression | Identifier {
@@ -71,8 +123,8 @@ export function composeTemplateLiteral(
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
+  // If the entire value is just a single expression like "{props.x}"
   const RegexCurlyBraced = /^\{[^{}]*\}$/;
-
   if (RegexCurlyBraced.test(value)) {
     return composeMemberExpressionOrIdentifier(value.slice(1, -1));
   }
@@ -85,7 +137,9 @@ export function composeTemplateLiteral(
     const raw = value.slice(lastIndex, index);
     quasis.push(makeTemplateElement(raw));
 
+    // Push the expression as MemberExpression or Identifier
     expressions.push(composeMemberExpressionOrIdentifier(expr.trim()));
+
     lastIndex = index + whole.length;
   }
 
@@ -117,50 +171,6 @@ function makeTemplateElement(raw: string): TemplateElement {
     type: "TemplateElement",
     value: { raw, cooked: raw },
     tail: false,
-  };
-}
-
-/**
- * Parses a string with {brackets} and returns an ArrayExpression AST node.
- * It strictly separates static text (Literal) from identifiers (MemberExpression).
- */
-export function composeArrayExpression(value: string): ArrayExpression | Expression {
-  const elements: Expression[] = [];
-  const regex = /\{([^{}]+)\}/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  // If the entire value is just a single expression like "{props.x}"
-  const RegexCurlyBraced = /^\{[^{}]*\}$/;
-  if (RegexCurlyBraced.test(value)) {
-    return composeMemberExpressionOrIdentifier(value.slice(1, -1));
-  }
-
-  while ((match = regex.exec(value)) !== null) {
-    const [whole, expr] = match;
-    const index = match.index;
-
-    // 1. Push preceding static text as a Literal (if not empty)
-    const precedingText = value.slice(lastIndex, index);
-    if (precedingText) {
-      elements.push({ type: "Literal", value: precedingText });
-    }
-
-    // 2. Push the dynamic expression (MemberExpression or Identifier)
-    elements.push(composeMemberExpressionOrIdentifier(expr.trim()));
-
-    lastIndex = index + whole.length;
-  }
-
-  // 3. Push any remaining static text as a Literal
-  const remainingText = value.slice(lastIndex);
-  if (remainingText) {
-    elements.push({ type: "Literal", value: remainingText });
-  }
-
-  return {
-    type: "ArrayExpression",
-    elements,
   };
 }
 
