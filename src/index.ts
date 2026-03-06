@@ -76,15 +76,13 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
     visit(tree, (node) => {
       if (node.type !== "CallExpression") return CONTINUE;
 
-      /* istanbul ignore if */
-      if ("name" in node.callee) {
-        if (
-          node.callee.name !== "_jsx" &&
-          node.callee.name !== "_jsxDEV" &&
-          node.callee.name !== "_jsxs"
-        ) {
-          return;
-        }
+      if (
+        "name" in node.callee &&
+        node.callee.name !== "_jsx" &&
+        node.callee.name !== "_jsxDEV" &&
+        node.callee.name !== "_jsxs"
+      ) {
+        return;
       }
 
       // A CallExpression has two arguments
@@ -107,30 +105,23 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
       // if (
       //   firstArgument.type === "Literal" &&
       //   typeof firstArgument.value === "string" &&
-      //   targetTags.includes(firstArgument.value.toLowerCase())
+      //   targetTags.includes(firstArgument.value.toLowerCase()) &&
+      //   secondArgument.type === "ObjectExpression"
       // ) {
-      //   if (secondArgument.type === "ObjectExpression") {
-      //     objectExpression = secondArgument;
-      //     currentTag = firstArgument.value as TargetTag;
-      //   }
+      //   objectExpression = secondArgument;
+      //   currentTag = firstArgument.value as TargetTag;
       // }
 
-      if (firstArgument.type === "MemberExpression") {
-        /* istanbul ignore if */
-        if (
-          firstArgument.object.type === "Identifier" &&
-          firstArgument.object.name === "_components"
-        ) {
-          if (
-            firstArgument.property.type === "Identifier" &&
-            targetTags.includes(firstArgument.property.name.toLowerCase())
-          ) {
-            if (secondArgument.type === "ObjectExpression") {
-              objectExpression = secondArgument;
-              currentTag = firstArgument.property.name as TargetTag;
-            }
-          }
-        }
+      if (
+        firstArgument.type === "MemberExpression" &&
+        firstArgument.object.type === "Identifier" &&
+        firstArgument.object.name === "_components" &&
+        firstArgument.property.type === "Identifier" &&
+        targetTags.includes(firstArgument.property.name.toLowerCase()) &&
+        secondArgument.type === "ObjectExpression"
+      ) {
+        objectExpression = secondArgument;
+        currentTag = firstArgument.property.name as TargetTag;
       }
 
       if (objectExpression && currentTag) {
