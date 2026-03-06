@@ -6,7 +6,8 @@ import { CONTINUE, visit } from "estree-util-visit";
 import {
   isStringLiteral,
   isArrayExpression,
-  composeArrayExpression,
+  composeArrayExpressionForCodeFence,
+  composeTemplateLiteralForCodeFence,
   composeTemplateLiteral,
   getInterpolationRegexForCodeFence,
   normalizeBracedExpressions,
@@ -82,7 +83,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
         );
 
         // disturb to {!%&expression&%!} to distinguish code fence language syntax
-        return composeArrayExpression(val.replace(regex, "{!%&$1&%!}"));
+        return composeArrayExpressionForCodeFence(val.replace(regex, "{!%&$1&%!}"));
       },
     },
     default: {
@@ -251,23 +252,49 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
           }
         });
 
-        // visit the children additionally, if the node is an anchor
-        if (openingElement && currentTag === "a") {
-          visit(node, (node_) => {
-            if (
-              node_.type === "JSXExpressionContainer" &&
-              node_.expression.type === "Literal" &&
-              typeof node_.expression.value === "string"
-            ) {
-              const propertyValue = normalizeBracedExpressions(
-                decodeURI(node_.expression.value),
-              );
+        if (filterNameAllowOrExclude("children", allowedTag, excludedTag)) {
+          // visit the children of anchors
+          if (currentTag === "a") {
+            visit(node, (node_) => {
+              if (
+                node_.type === "JSXExpressionContainer" &&
+                node_.expression.type === "Literal" &&
+                typeof node_.expression.value === "string"
+              ) {
+                const propertyValue = normalizeBracedExpressions(
+                  decodeURI(node_.expression.value),
+                );
 
-              if (/\{[^{}]+\}/.test(propertyValue)) {
-                node_.expression = composeTemplateLiteral(propertyValue);
+                if (/\{[^{}]+\}/.test(propertyValue)) {
+                  node_.expression = composeTemplateLiteral(propertyValue);
+                }
               }
-            }
-          });
+            });
+          }
+
+          // visit the children of code
+          if (currentTag === "code") {
+            visit(node, (node_) => {
+              if (
+                node_.type === "JSXExpressionContainer" &&
+                node_.expression.type === "Literal" &&
+                typeof node_.expression.value === "string"
+              ) {
+                const expressionValue = node_.expression.value;
+
+                const regex = getInterpolationRegexForCodeFence(
+                  settings.interpolationSyntaxForCodeFence,
+                );
+
+                if (regex.test(expressionValue)) {
+                  // disturb to {!%&expression&%!} to distinguish code fence language syntax
+                  node_.expression = composeTemplateLiteralForCodeFence(
+                    expressionValue.replace(regex, "{!%&$1&%!}"),
+                  );
+                }
+              }
+            });
+          }
         }
       }
 
