@@ -24,6 +24,7 @@
     "test:integration": "npm run test:watch -- main.integration.spec.ts",
     "test:reference": "npm run test:watch -- main.reference.spec.ts",
     "test:code": "npm run test -- code.spec.ts",
+    "test:codx": "npm run test -- code.jsx.spec.ts",
     "test:codi": "npm run test -- code.integration.spec.ts",
     "test-coverage": "npm run test -- --coverage",
     "prepack": "npm run build",

@@ -1,5 +1,4 @@
 import dedent from "dedent";
-import * as prettier from "prettier";
 
 import { processMd, processMdx } from "./util/integration";
 

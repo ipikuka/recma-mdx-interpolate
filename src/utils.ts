@@ -10,7 +10,7 @@ import type {
 
 // a utility for type predicate (estree node type guards)
 function isNodeType<T extends { type: string }>(node: unknown, type: T["type"]): node is T {
-  return typeof node === "object" && node !== null && (node as any).type === type;
+  return typeof node === "object" && node !== null && "type" in node && node.type === type;
 }
 
 export const isArrayExpression = (node: unknown): node is ArrayExpression =>
@@ -69,7 +69,7 @@ function composeMemberExpressionOrIdentifier(value: string): MemberExpression | 
 /**
  * Parses a string with {!%&brackets&%!} and returns an ArrayExpression AST node.
  */
-export function composeArrayExpression(value: string): ArrayExpression {
+export function composeArrayExpressionForCodeFence(value: string): ArrayExpression {
   const elements: Expression[] = [];
 
   const regex = /\{!%&([^{}]+)&%!}/g; // Matches {!%&expression&%!}
@@ -110,6 +110,64 @@ export function composeArrayExpression(value: string): ArrayExpression {
   return {
     type: "ArrayExpression",
     elements,
+  };
+}
+
+/**
+ * Parses a string with {!%&brackets&%!} and returns if,
+ * MemberExpression or Identifier if the entire value is just a single expression
+ * TemplateLiteral if it contains static text mixed with expressions.
+ */
+export function composeTemplateLiteralForCodeFence(
+  value: string,
+): TemplateLiteral | MemberExpression | Identifier {
+  const quasis: TemplateElement[] = [];
+  const expressions: Expression[] = [];
+
+  const regex = /\{!%&([^{}]+)&%!}/g; // Matches {!%&expression&%!}
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  // If the entire value is just a single expression like "{props.x}"
+  const RegexCurlyBraced = /^\{!%&[^{}]+&%!}$/;
+  if (RegexCurlyBraced.test(value)) {
+    return composeMemberExpressionOrIdentifier(value.slice(4, -4));
+  }
+
+  while ((match = regex.exec(value)) !== null) {
+    const [whole, expr] = match;
+    const index = match.index;
+
+    // Always push the in-between or leading text (even if empty)
+    const raw = value.slice(lastIndex, index);
+    quasis.push(makeTemplateElement(raw));
+
+    // Push the expression as MemberExpression or Identifier
+    expressions.push(composeMemberExpressionOrIdentifier(expr.trim()));
+
+    lastIndex = index + whole.length;
+  }
+
+  // Always push final quasi (even if "")
+  const tailRaw = value.slice(lastIndex);
+  quasis.push(makeTemplateElement(tailRaw));
+
+  // Validate shape
+  if (quasis.length !== expressions.length + 1) {
+    throw new Error(
+      `TemplateLiteral malformed: quasis.length=${quasis.length}, expressions.length=${expressions.length}`,
+    );
+  }
+
+  // Fix tail flag
+  for (let i = 0; i < quasis.length; i++) {
+    quasis[i].tail = i === quasis.length - 1;
+  }
+
+  return {
+    type: "TemplateLiteral",
+    quasis,
+    expressions,
   };
 }
 

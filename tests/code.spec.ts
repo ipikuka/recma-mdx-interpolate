@@ -88,14 +88,14 @@ describe("recma-mdx-interpolate, disable interpolation in code fences", () => {
   // ******************************************
   it("handle interpolation, format md", async () => {
     expect(await compile(source, { format: "md", exclude: { code: true } })).toContain(`
-      children: \"pnpm add {{loader}}@{{props.version}}\\n\"
+      children: "pnpm add {{loader}}@{{props.version}}\\n"
     `);
   });
 
   // ******************************************
   it("handle interpolation, format mdx", async () => {
     expect(await compile(source, { format: "mdx", exclude: { code: true } })).toContain(`
-      children: \"pnpm add {{loader}}@{{props.version}}\\n\"
+      children: "pnpm add {{loader}}@{{props.version}}\\n"
     `);
   });
 });
@@ -112,14 +112,14 @@ describe("recma-mdx-interpolate, code fences with default syntax but using confl
   // ******************************************
   it("handle interpolation, format md", async () => {
     expect(await compile(source, { format: "md" })).toContain(`
-      children: \"pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n\"
+      children: "pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n"
     `);
   });
 
   // ******************************************
   it("handle interpolation, format mdx", async () => {
     expect(await compile(source, { format: "mdx" })).toContain(`
-      children: \"pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n\"
+      children: "pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n"
     `);
   });
 });
