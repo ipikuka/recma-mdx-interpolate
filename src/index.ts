@@ -1,15 +1,16 @@
 import type { Plugin } from "unified";
-import type { ObjectExpression, Program } from "estree";
+import type { ObjectExpression, Program, Node } from "estree";
 import type { JSXOpeningElement } from "estree-jsx";
 import { CONTINUE, visit } from "estree-util-visit";
 
 import {
+  isStringLiteral,
+  isArrayExpression,
   composeArrayExpression,
   composeTemplateLiteral,
-  filterNameAllowOrExlude,
-  isStringLiteral,
-  normalizeBracedExpressions,
   getInterpolationRegexForCodeFence,
+  normalizeBracedExpressions,
+  filterNameAllowOrExclude,
 } from "./utils.js";
 
 type TargetTag = "a" | "img" | "video" | "audio" | "source" | "code";
@@ -70,6 +71,26 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
   const settings = Object.assign({}, DEFAULT_SETTINGS, options) as Required<InterpolateOptions>;
 
   if (settings.disable) return;
+
+  const TAG_STRATEGIES = {
+    code: {
+      normalize: (val: string) => val,
+      regex: getInterpolationRegexForCodeFence(settings.interpolationSyntaxForCodeFence),
+      composer: (val: string) => {
+        const regex = getInterpolationRegexForCodeFence(
+          settings.interpolationSyntaxForCodeFence,
+        );
+
+        // disturb to {!%&expression&%!} to distinguish code fence language syntax
+        return composeArrayExpression(val.replace(regex, "{!%&$1&%!}"));
+      },
+    },
+    default: {
+      normalize: (val: string) => normalizeBracedExpressions(decodeURI(val)),
+      regex: /\{[^{}]+\}/,
+      composer: composeTemplateLiteral,
+    },
+  };
 
   return (tree: Program) => {
     // handle JSX automatic runtime
@@ -134,44 +155,29 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
             /* istanbul ignore next */
             if (property.key.type !== "Identifier") return false;
             const propertyName = property.key.name.toLowerCase();
-            return filterNameAllowOrExlude(propertyName, allowedTag, excludedTag);
+            return filterNameAllowOrExclude(propertyName, allowedTag, excludedTag);
           });
 
         properties.forEach((property) => {
-          if (isStringLiteral(property.value)) {
-            // special handling for code fences, to allow custom interpolation syntax
-            if (currentTag === "code") {
-              const interpolationRegexForCodeFence = getInterpolationRegexForCodeFence(
-                settings.interpolationSyntaxForCodeFence,
-              );
+          const strategy =
+            TAG_STRATEGIES[currentTag as keyof typeof TAG_STRATEGIES] || TAG_STRATEGIES.default;
 
-              if (interpolationRegexForCodeFence.test(property.value.value)) {
-                const propertyValue = property.value.value.replace(
-                  interpolationRegexForCodeFence,
-                  "{$1}",
-                );
+          const processNode = (node: Node) => {
+            if (!isStringLiteral(node)) return;
 
-                if (/\{[^{}]+\}/.test(propertyValue)) {
-                  property.value = composeArrayExpression(propertyValue);
-                }
-              }
-            } else {
-              const propertyValue = normalizeBracedExpressions(decodeURI(property.value.value));
+            // normalize to {expression} for img, a, video, audio, source tags
+            const normalizedValue = strategy.normalize(node.value);
 
-              if (/\{[^{}]+\}/.test(propertyValue)) {
-                property.value = composeTemplateLiteral(propertyValue);
-              }
+            if (strategy.regex.test(normalizedValue)) {
+              const newNode = strategy.composer(normalizedValue);
+              Object.assign(node, newNode);
             }
-          } else if (property.value.type === "ArrayExpression") {
-            visit(property.value, (node) => {
-              if (isStringLiteral(node)) {
-                const propertyValue = normalizeBracedExpressions(decodeURI(node.value));
+          };
 
-                if (/\{[^{}]+\}/.test(propertyValue)) {
-                  Object.assign(node, composeTemplateLiteral(propertyValue));
-                }
-              }
-            });
+          if (isStringLiteral(property.value)) {
+            processNode(property.value);
+          } else if (isArrayExpression(property.value)) {
+            visit(property.value, processNode);
           }
         });
       }
@@ -226,7 +232,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
             /* istanbul ignore next */
             if (attr.name.type !== "JSXIdentifier") return false;
             const attrName = attr.name.name.toLowerCase();
-            return filterNameAllowOrExlude(attrName, allowedTag, excludedTag);
+            return filterNameAllowOrExclude(attrName, allowedTag, excludedTag);
           });
 
         jsxAttributes.forEach((jsxAttribute) => {

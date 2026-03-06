@@ -99,3 +99,27 @@ describe("recma-mdx-interpolate, disable interpolation in code fences", () => {
     `);
   });
 });
+
+describe("recma-mdx-interpolate, code fences with default syntax but using conflicting syntax", () => {
+  const source = dedent`
+    \`\`\`bash
+    pnpm add {& loader &}@{& props.version &}
+
+    const { name } = props;
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, format md", async () => {
+    expect(await compile(source, { format: "md" })).toContain(`
+      children: \"pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n\"
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, format mdx", async () => {
+    expect(await compile(source, { format: "mdx" })).toContain(`
+      children: \"pnpm add {& loader &}@{& props.version &}\\n\\nconst { name } = props;\\n\"
+    `);
+  });
+});

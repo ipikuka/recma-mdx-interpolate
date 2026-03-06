@@ -8,14 +8,16 @@ import type {
   ArrayExpression,
 } from "estree";
 
-export function isStringLiteral(node: unknown): node is Literal & { value: string } {
-  return (
-    typeof node === "object" &&
-    node !== null &&
-    (node as Literal).type === "Literal" &&
-    typeof (node as Literal).value === "string"
-  );
+// a utility for type predicate (estree node type guards)
+function isNodeType<T extends { type: string }>(node: unknown, type: T["type"]): node is T {
+  return typeof node === "object" && node !== null && (node as any).type === type;
 }
+
+export const isArrayExpression = (node: unknown): node is ArrayExpression =>
+  isNodeType<ArrayExpression>(node, "ArrayExpression");
+
+export const isStringLiteral = (node: unknown): node is Literal & { value: string } =>
+  isNodeType<Literal & { value: string }>(node, "Literal") && typeof node.value === "string";
 
 function replaceDoubleBraces(input: string): string {
   return input.replace(/\{\{([^{}]*)\}\}/g, "{$1}");
@@ -32,6 +34,9 @@ export function normalizeBracedExpressions(input: string): string {
   return removePrefixBeforeColon(afterDoubleBraces);
 }
 
+/**
+ * Composes a MemberExpression or Identifier from a dot-notated string.
+ */
 function composeMemberExpressionOrIdentifier(value: string): MemberExpression | Identifier {
   const parts = value.split(".");
 
@@ -62,21 +67,21 @@ function composeMemberExpressionOrIdentifier(value: string): MemberExpression | 
 }
 
 /**
- * Parses a string with {brackets} and returns an ArrayExpression AST node.
+ * Parses a string with {!%&brackets&%!} and returns an ArrayExpression AST node.
  */
 export function composeArrayExpression(value: string): ArrayExpression {
   const elements: Expression[] = [];
 
-  const regex = /\{([^{}]+)\}/g;
+  const regex = /\{!%&([^{}]+)&%!}/g; // Matches {!%&expression&%!}
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  // If the entire value is just a single expression like "{props.x}"
-  const RegexCurlyBraced = /^\{[^{}]*\}$/;
+  // If the entire value is just a single expression like "{!%&props.x&%!}"
+  const RegexCurlyBraced = /^\{!%&[^{}]+&%!}$/;
   if (RegexCurlyBraced.test(value)) {
     return {
       type: "ArrayExpression",
-      elements: [composeMemberExpressionOrIdentifier(value.slice(1, -1))],
+      elements: [composeMemberExpressionOrIdentifier(value.slice(4, -4))],
     };
   }
 
@@ -124,7 +129,7 @@ export function composeTemplateLiteral(
   let match: RegExpExecArray | null;
 
   // If the entire value is just a single expression like "{props.x}"
-  const RegexCurlyBraced = /^\{[^{}]*\}$/;
+  const RegexCurlyBraced = /^\{[^{}]+\}$/;
   if (RegexCurlyBraced.test(value)) {
     return composeMemberExpressionOrIdentifier(value.slice(1, -1));
   }
@@ -174,7 +179,7 @@ function makeTemplateElement(raw: string): TemplateElement {
   };
 }
 
-export function filterNameAllowOrExlude(
+export function filterNameAllowOrExclude(
   name: string,
   allowed: string | string[] | true,
   excluded: string | string[] | true | undefined,
