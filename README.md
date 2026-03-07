@@ -26,6 +26,93 @@ This package is a **[unified][unified]** (**[recma][recma]**) plugin **that enab
 
 **[unified][unified]** is a project that transforms content with abstract syntax trees (ASTs) using the new parser **[micromark][micromark]**. **[recma][recma]** adds support for producing a javascript code by transforming **[esast][esast]** which stands for Ecma Script Abstract Syntax Tree (AST) that is used in production of compiled source for the **[MDX][MDX]**.
 
+## Installation
+
+This package is suitable for ESM only. In Node.js (version 18+), install with npm:
+
+```bash
+npm install recma-mdx-interpolate
+```
+
+or
+
+```bash
+yarn add recma-mdx-interpolate
+```
+
+## Usage
+
+Say we have the following file, `example.mdx`,
+
+```mdx
+[{props.email}](mailto:{props.email} "{props.title}")
+
+![{{alt}}]({src} "{title}")
+```
+
+And our module, `example.js`, looks as follows:
+
+```javascript
+import { read } from "to-vfile";
+import { compile } from "@mdx-js/mdx";
+import recmaMdxInterpolate from "recma-mdx-interpolate";
+
+main();
+
+async function main() {
+  const source = await read("example.mdx");
+
+  const compiledSource = await compile(source, {
+    recmaPlugins: [recmaMdxInterpolate],
+  });
+
+  return String(compiledSource);
+}
+```
+
+Now, running `node example.js` produces the `compiled source` like below:
+
+```diff
+// ...
+function _createMdxContent(props) {
+  // ...
+  return _jsxs(_Fragment, {
+    children: [_jsx(_components.p, {
+      children: _jsx(_components.a, {
+-        href: "mailto:%7Bprops.email%7D",
++        href: `mailto:${props.email}`,
+-        title: "{props.title}",
++        title: props.title,
+        children: props.email
+      })
+    }), "\n", _jsx(_components.p, {
+      children: _jsx(_components.img, {
+-        src: "%7Bsrc%7D",
++        src: src,
+-        alt: "{alt}",
++        alt: alt,
+-        title: "{title}"
++        title: title,
+      })
+    })]
+  });
+}
+// ...
+```
+This is roughly equivalent JSX with:
+```js
+export default function MDXContent() {
+  return (
+    <p>
+      <a href={`mailto:${props.email}`} title={props.title}>{props.email}</a>
+    </p>
+    <p>
+      <img alt={alt} src={src} title={title} />
+    </p>
+  )
+}
+```
+
 ## The facts
 
 Normally, interpolation of an identifier (*identifiers wrapped with curly braces, for example `{name}` or `{props.src}`*) within markdown content doesn't work. **The interpolation of an identifier, in other words MDX expressions, is a matter of MDX.**
@@ -87,7 +174,7 @@ This is a weird workaround, but nothing to do else due to internal MDX parsing, 
 
 ### Considerations for Markdown Code Fence Syntax
 
-**`recma-mdx-interpolation`** supports interpolation in code fence children (the content of ```....``` blocks). By default, code fence interpolation uses double curly braces `{{}}`:
+**`recma-mdx-interpolation`** supports interpolation in code fence children (the content of code blocks). By default, code fence interpolation uses double curly braces **`{{ }}`**:
 
 ````markdown
 ```bash
@@ -95,10 +182,10 @@ pnpm add @mdx-js/loader@{{ props.version-name }}
 ```
 ````
 
-However, if your code fence language already uses **`{{}}`** syntax, you can customize the interpolation syntax using the **`interpolationSyntaxForCodeFence`** option to avoid conflicts. See the [interpolationSyntaxForCodeFence](#interpolationsyntaxforcodefence) option for details.
+However, if your code fence language already uses **`{{ }}`** syntax, you can customize the interpolation syntax using the **`interpolationSyntaxForCodeFence`** option to avoid conflicts. See the [interpolationSyntaxForCodeFence](#interpolationsyntaxforcodefence) option for details.
 
 **Important:** Code fence interpolation behaves differently from interpolation in other attributes:
-+ **Code fences:** Use configurable syntax (default **`{{}}`**)
++ **Code fences:** Use configurable syntax (default **`{{ }}`**)
 + **Other attributes (href, src, alt, title):** Use single curly braces **`{}`** (cannot be customized)
 
 ## When should I use this?
@@ -200,93 +287,6 @@ As you pay attention, there is no self-closing slash in `<img>` element above. B
 <img src={image.src} alt={image.alt} title={image.title}>  it is okey
 <img src={image.src} alt={image.alt} title={image.title} /> it is okey
 <img src={image.src} alt={image.alt} title={image.title}/> it is okey but the plugin infers "/" belongs the title.
-```
-
-## Installation
-
-This package is suitable for ESM only. In Node.js (version 18+), install with npm:
-
-```bash
-npm install recma-mdx-interpolate
-```
-
-or
-
-```bash
-yarn add recma-mdx-interpolate
-```
-
-## Usage
-
-Say we have the following file, `example.mdx`,
-
-```mdx
-[{props.email}](mailto:{props.email} "{props.title}")
-
-![{{alt}}]({src} "{title}")
-```
-
-And our module, `example.js`, looks as follows:
-
-```javascript
-import { read } from "to-vfile";
-import { compile } from "@mdx-js/mdx";
-import recmaMdxInterpolate from "recma-mdx-interpolate";
-
-main();
-
-async function main() {
-  const source = await read("example.mdx");
-
-  const compiledSource = await compile(source, {
-    recmaPlugins: [recmaMdxInterpolate],
-  });
-
-  return String(compiledSource);
-}
-```
-
-Now, running `node example.js` produces the `compiled source` like below:
-
-```diff
-// ...
-function _createMdxContent(props) {
-  // ...
-  return _jsxs(_Fragment, {
-    children: [_jsx(_components.p, {
-      children: _jsx(_components.a, {
--        href: "mailto:%7Bprops.email%7D",
-+        href: `mailto:${props.email}`,
--        title: "{props.title}",
-+        title: props.title,
-        children: props.email
-      })
-    }), "\n", _jsx(_components.p, {
-      children: _jsx(_components.img, {
--        src: "%7Bsrc%7D",
-+        src: src,
--        alt: "{alt}",
-+        alt: alt,
--        title: "{title}"
-+        title: title,
-      })
-    })]
-  });
-}
-// ...
-```
-This is roughly equivalent JSX with:
-```js
-export default function MDXContent() {
-  return (
-    <p>
-      <a href={`mailto:${props.email}`} title={props.title}>{props.email}</a>
-    </p>
-    <p>
-      <img alt={alt} src={src} title={title} />
-    </p>
-  )
-}
 ```
 
 ## Options
