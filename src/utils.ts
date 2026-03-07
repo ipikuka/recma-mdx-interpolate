@@ -292,7 +292,7 @@ const escapeRegex = (s: string) => s.replace(/[^a-zA-Z0-9_]/g, "\\$&");
  * It strictly captures valid JavaScript identifiers or member expressions (e.g., name or props.user.name).
  * The target is capturing JavaScript object keys or dot-notated member expressions.
  */
-export function getInterpolationRegexForCodeFence(open: string): RegExp {
+export function getInterpolationRegexForCodeFence(open: string, strict: boolean): RegExp {
   const close = mirrorString(open);
 
   const escapedOpen = escapeRegex(open);
@@ -301,17 +301,25 @@ export function getInterpolationRegexForCodeFence(open: string): RegExp {
   /**
    * Regex Logic:
    * 1. ${escapedOpen} : Start delimiter (e.g., \$\$)
-   * 2. \s* : Optional spaces
-   * 3. ([a-zA-Z_$][\w$-]*(?:\.[\w$-]+)*) :
-   * - [a-zA-Z_$] : Must start with letter, _, or $
-   * - [\w$-]* : Can continue with alphanumeric, _, $, or dash (-)
-   * - (?:\.[\w$-]+)* : Optional non-capturing group for dot-notation,
-   * allowing dashes and alphanumeric after dots.
-   * 4. \s* : Optional spaces
-   * 5. ${escapedClose}: End delimiter
+   * 2. (strict === false) \s* : Optional whitespace before the expression
+   * 3. ([a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$-]*)*) :
+   *    - [a-zA-Z_$] : First identifier must start with a letter, _ or $
+   *    - [\w$]* : Remaining characters of the first identifier may include alphanumeric, _ or $
+   *    - (?:\.[a-zA-Z_$][\w$-]*)* : Optional member expressions using dot notation
+   *      where each property:
+   *        • starts with a letter, _ or $
+   *        • may contain alphanumeric, _, $, or dash (-)
+   *      This allows patterns like: name, version.name, version.my-name
+   * 4. (strict === false) \s* : Optional whitespace after the expression
+   * 5. ${escapedClose} : End delimiter
    */
-  return new RegExp(
-    `${escapedOpen}\\s*([a-zA-Z_$][\\w$-]*(?:\\.[\\w$-]+)*)\\s*${escapedClose}`,
-    "g",
-  );
+  return strict
+    ? new RegExp(
+        `${escapedOpen}([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$-]*)*)${escapedClose}`,
+        "g",
+      )
+    : new RegExp(
+        `${escapedOpen}\\s*([a-zA-Z_$][\\w$]*(?:\\.[a-zA-Z_$][\\w$-]*)*)\\s*${escapedClose}`,
+        "g",
+      );
 }

@@ -27,13 +27,15 @@ const MapOfTargetTagAttributes: Record<TargetTag, string | string[] | true> = {
 
 export type InterpolateOptions = {
   /**
-   * Exclude specific tag and attributes
-   */
-  exclude?: Partial<typeof MapOfTargetTagAttributes>;
-  /**
    * Disable the plugin (for example when the format is not "mdx")
    */
   disable?: boolean;
+
+  /**
+   * Exclude specific tag and attributes
+   */
+  exclude?: Partial<typeof MapOfTargetTagAttributes>;
+
   /**
    * The syntax for interpolation in code fences,
    * default is "{{"; the reversed "}}" is implicitly used to close the interpolation.
@@ -52,12 +54,19 @@ export type InterpolateOptions = {
    * Note: this option only affects code fences, for other tags (a, img, video, audio, source), the syntax is always { and }.
    */
   interpolationSyntaxForCodeFence?: string;
+
+  /**
+   * Require interpolation expressions to have no leading or trailing spaces (only for code fences)
+   * whitespace inside `{{` and `}}` (e.g. `{{name}}` instead of `{{ name }}`).
+   */
+  strict?: boolean;
 };
 
 const DEFAULT_SETTINGS: InterpolateOptions = {
-  exclude: {},
   disable: false,
+  exclude: {},
   interpolationSyntaxForCodeFence: "{{",
+  strict: false,
 };
 
 const targetTags = Object.keys(MapOfTargetTagAttributes);
@@ -78,10 +87,14 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
   const TAG_STRATEGIES = {
     code: {
       normalize: (val: string) => val,
-      regex: getInterpolationRegexForCodeFence(settings.interpolationSyntaxForCodeFence),
+      regex: getInterpolationRegexForCodeFence(
+        settings.interpolationSyntaxForCodeFence,
+        settings.strict,
+      ),
       composer: (val: string) => {
         const regex = getInterpolationRegexForCodeFence(
           settings.interpolationSyntaxForCodeFence,
+          settings.strict,
         );
 
         // disturb to {!%&expression&%!} to distinguish code fence language syntax
@@ -286,6 +299,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
 
                 const regex = getInterpolationRegexForCodeFence(
                   settings.interpolationSyntaxForCodeFence,
+                  settings.strict,
                 );
 
                 if (regex.test(expressionValue)) {

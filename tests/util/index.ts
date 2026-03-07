@@ -12,6 +12,7 @@ export const compile = async (
     exclude = {},
     disable = false,
     interpolationSyntaxForCodeFence = "{{",
+    strict = false,
     format = "mdx",
     ...rest
   } = options ?? {};
@@ -22,7 +23,7 @@ export const compile = async (
       ...rest,
       rehypePlugins: format === "md" ? [rehypeRaw] : undefined,
       recmaPlugins: [
-        [recmaMdxInterpolate, { exclude, disable, interpolationSyntaxForCodeFence }],
+        [recmaMdxInterpolate, { exclude, disable, interpolationSyntaxForCodeFence, strict }],
         logTree({
           excludeKeys: ["position", "range", "loc", "start", "end"],
           enabled: false,

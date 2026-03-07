@@ -132,8 +132,40 @@ pnpm add @mdx-js/loader@{{props.version}}
 ```
 ````
 
+The identifiers can be just a javascript identifier or object notation. **`recma-mdx-interpolate`** can handles them correctly.
+
+```js
+{{ name }}
+↓
+${name}
+
+{{ npm.name }}
+↓
+${npm.name}
+
+{{ npm.version-name }}
+↓
+${npm["version-name"]}
+```
+
+**`recma-mdx-interpolate`** does not capture invalid javascript identifier or object notation; and keeps the text as it is.
+
+```text
+{{ my-name }}
+❌ keeps it as it is
+{{ my-name }}
+
+{{ node-name.version }}
+❌ keeps it as it is
+{{ node-name.version }}
+
+{{ loader }} {{ loader-version }}
+✅ ❌ captures the first one, and keeps the second as it is
+${loader} {{ loader-version }}
+```
+
 > [!IMPORTANT]
-> You should provide the value of identifiers in your integration (via frontmatter; or `props` in `@mdx-js/mdx`; `scope` in `next-mdx-remote-client` and `next-mdx-remote` etc).
+> You should provide the value of identifiers in your integration (via frontmatter; or `props` in `@mdx-js/mdx`; or `scope` in `next-mdx-remote-client` and `next-mdx-remote` etc).
 
 ### The list of the tags and attributes that `recma-mdx-interpolate` processes
 
@@ -147,6 +179,7 @@ pnpm add @mdx-js/loader@{{props.version}}
 | **`<code>`**     | **`content (children)`**<sup>**</sup>          |**`content (children)`**<sup>**</sup>.         |
 
 *Note `*`: works with a workaround only.*
+
 *Note `**`: works with a special syntax apart from single curly braces*
 
 ### `recma-mdx-interpolate` supports html in markdown
@@ -262,10 +295,23 @@ All options are optional and have default values.
 
 ```typescript
 export type InterpolateOptions = {
-  exclude?: Partial<Record<"a" | "img" | "video" | "audio" | "source" | "code", string | string[] | true>>
   disable?: boolean;
+  exclude?: Partial<Record<"a" | "img" | "video" | "audio" | "source" | "code", string | string[] | true>>
   interpolationSyntaxForCodeFence?: string;
+  strict?: boolean;
 };
+```
+
+### disable
+
+It is a **boolean** option to disable the plugin completely.
+
+It is `false` by default.
+
+It could be useful if you want the plugin NOT to work when the format is not "mdx".
+
+```javascript
+use(recmaMdxInterpolate, { disable: format !== "mdx" } as InterpolateOptions);
 ```
 
 ### exclude
@@ -284,25 +330,13 @@ use(recmaMdxInterpolate, { exclude: {img: ["src"]} } as InterpolateOptions);
 ```
 Now, the `src` attribute of images will be excluded from processing.
 
-### disable
-
-It is a **boolean** option to disable the plugin completely.
-
-It is `false` by default.
-
-It could be useful if you want the plugin NOT to work when the format is not "mdx".
-
-```javascript
-use(recmaMdxInterpolate, { disable: format !== "mdx" } as InterpolateOptions);
-```
-
 ### interpolationSyntaxForCodeFence
 
 It is a **string** option to customize the interpolation syntax used in code fences only.
 
 Default is `"{{"` (double curly braces).
 
-> **Note:** This option affects **only code fences** (`<code>` elements). For all other attributes (`href`, `src`, `alt`, `title`), the interpolation syntax is single curly braces `{}` and cannot be customized.
+> **Note:** This option affects **only code fences** (`<code>` elements). For all other `image` and `link` attributes (`href`, `src`, `alt`, `title`), the interpolation syntax is single curly braces `{}` and cannot be customized.
 
 **Why use this option?**
 
@@ -334,6 +368,34 @@ pnpm add @mdx-js/loader@{{props.version}}
 pnpm add @mdx-js/loader@<<:props.version:>>
 ```
 ````
+
+### strict
+
+It is a **boolean** option to enforce strict interpolation syntax (only in code fences).
+
+It is `false` by default.
+
+It could be useful if you want to avoid accidental interpolation and require expressions to appear exactly between the delimiters without surrounding whitespace. When `strict` is enabled, the expression must not contain leading or trailing whitespace inside the delimiters.
+
+```javascript
+use(recmaMdxInterpolate, { strict: true } as InterpolateOptions);
+```
+
+Now, the plugin is going to behave:
+```md
+## valid examples
++ {{name}}
++ {{props.version}}
++ {{npm.version-name}}
+
+## Invalid examples (will not be captured)
++ {{ name }}
++ {{ name}}
++ {{name }}
++ {{ props.version }}
++ {{ props.version}}
++ {{props.version }}
+```
 
 ## Syntax tree
 
