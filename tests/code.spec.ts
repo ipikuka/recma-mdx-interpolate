@@ -146,3 +146,123 @@ describe("recma-mdx-interpolate, code fences with default syntax but using confl
     `);
   });
 });
+
+describe("recma-mdx-interpolate, code fences with default syntax in code highlighting", () => {
+  const source = dedent`
+    \`\`\`js
+    import {{ loader }} from {{ package_name }};
+
+    return <div>{ {{loader}} }</div>;
+    \`\`\`
+  `;
+
+  // ******************************************
+  it("handle interpolation, with code highlighting, format md", async () => {
+    expect(await compile(source, { format: "md", highlight: true })).toMatchInlineSnapshot(`
+      "import {jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
+      function _createMdxContent(props) {
+        const _components = {
+          code: "code",
+          pre: "pre",
+          span: "span",
+          ...props.components
+        };
+        return _jsx(_components.pre, {
+          children: _jsxs(_components.code, {
+            className: "hljs language-js",
+            children: [_jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "import"
+            }), [" ", loader, " "], _jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "from"
+            }), [" ", package_name, ";\\n\\n"], _jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "return"
+            }), " ", _jsxs(_components.span, {
+              className: "xml",
+              children: [_jsxs(_components.span, {
+                className: "hljs-tag",
+                children: ["<", _jsx(_components.span, {
+                  className: "hljs-name",
+                  children: "div"
+                }), ">"]
+              }), ["{ ", loader, " }"], _jsxs(_components.span, {
+                className: "hljs-tag",
+                children: ["</", _jsx(_components.span, {
+                  className: "hljs-name",
+                  children: "div"
+                }), ">"]
+              })]
+            }), ";\\n"]
+          })
+        });
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? _jsx(MDXLayout, {
+          ...props,
+          children: _jsx(_createMdxContent, {
+            ...props
+          })
+        }) : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation, with code highlighting, format mdx", async () => {
+    expect(await compile(source, { format: "mdx", highlight: true })).toMatchInlineSnapshot(`
+      "import {jsx as _jsx, jsxs as _jsxs} from "react/jsx-runtime";
+      function _createMdxContent(props) {
+        const _components = {
+          code: "code",
+          pre: "pre",
+          span: "span",
+          ...props.components
+        };
+        return _jsx(_components.pre, {
+          children: _jsxs(_components.code, {
+            className: "hljs language-js",
+            children: [_jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "import"
+            }), [" ", loader, " "], _jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "from"
+            }), [" ", package_name, ";\\n\\n"], _jsx(_components.span, {
+              className: "hljs-keyword",
+              children: "return"
+            }), " ", _jsxs(_components.span, {
+              className: "xml",
+              children: [_jsxs(_components.span, {
+                className: "hljs-tag",
+                children: ["<", _jsx(_components.span, {
+                  className: "hljs-name",
+                  children: "div"
+                }), ">"]
+              }), ["{ ", loader, " }"], _jsxs(_components.span, {
+                className: "hljs-tag",
+                children: ["</", _jsx(_components.span, {
+                  className: "hljs-name",
+                  children: "div"
+                }), ">"]
+              })]
+            }), ";\\n"]
+          })
+        });
+      }
+      export default function MDXContent(props = {}) {
+        const {wrapper: MDXLayout} = props.components || ({});
+        return MDXLayout ? _jsx(MDXLayout, {
+          ...props,
+          children: _jsx(_createMdxContent, {
+            ...props
+          })
+        }) : _createMdxContent(props);
+      }
+      "
+    `);
+  });
+});

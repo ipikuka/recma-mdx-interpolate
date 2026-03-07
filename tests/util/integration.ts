@@ -4,12 +4,13 @@ import ReactDOMServer from "react-dom/server";
 import rehypeRaw from "rehype-raw";
 
 import plugin, { type InterpolateOptions } from "../../src";
+import rehypeHighlight from "rehype-highlight";
 
 export const processMd = async (
   input: VFileCompatible,
-  options?: InterpolateOptions & { scope?: EvaluateOptions["scope"] },
+  options?: InterpolateOptions & { scope?: EvaluateOptions["scope"]; highlight?: boolean },
 ) => {
-  const { scope, ...rest } = options ?? {};
+  const { scope, highlight, ...rest } = options ?? {};
   const format = "md";
 
   const { content, error } = await evaluate({
@@ -18,7 +19,7 @@ export const processMd = async (
       scope,
       mdxOptions: {
         format,
-        rehypePlugins: [rehypeRaw],
+        rehypePlugins: [rehypeRaw, ...(highlight ? [rehypeHighlight] : [])],
         recmaPlugins: [[plugin, rest]],
       },
     },
@@ -31,9 +32,9 @@ export const processMd = async (
 
 export const processMdx = async (
   input: VFileCompatible,
-  options?: InterpolateOptions & { scope?: EvaluateOptions["scope"] },
+  options?: InterpolateOptions & { scope?: EvaluateOptions["scope"]; highlight?: boolean },
 ) => {
-  const { scope, ...rest } = options ?? {};
+  const { scope, highlight, ...rest } = options ?? {};
   const format = "mdx";
 
   const { content, error } = await evaluate({
@@ -42,6 +43,7 @@ export const processMdx = async (
       scope,
       mdxOptions: {
         format,
+        rehypePlugins: highlight ? [rehypeHighlight] : undefined,
         recmaPlugins: [[plugin, rest]],
       },
     },

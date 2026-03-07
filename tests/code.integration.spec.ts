@@ -1,4 +1,5 @@
 import dedent from "dedent";
+import * as prettier from "prettier";
 
 import { processMd, processMdx } from "./util/integration";
 
@@ -57,6 +58,34 @@ describe("recma-mdx-interpolate, code fence integration", () => {
 
     expect(htmlMd).toMatchInlineSnapshot(expected);
     expect(htmlMdx).toMatchInlineSnapshot(expected);
+  });
+
+  // ******************************************
+  it("handle interpolation in markdown code fences with highlighting", async () => {
+    const source = dedent`
+      \`\`\`js
+      import {{ loader }} from {{ package_name }};
+      return <div>{loader}</div>;
+      \`\`\`
+    `;
+
+    const scope = {
+      loader: "loader, { type Loader }",
+      package_name: '"@mdx-js/package"',
+    };
+
+    const expected = `
+      "<pre><code class="hljs language-js"><span class="hljs-keyword">import</span> loader, { type Loader } <span class="hljs-keyword">from</span> &quot;@mdx-js/package&quot;;
+      <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>{loader}<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>;
+      </code></pre>
+      "
+    `;
+
+    const htmlMd = await processMd(source, { scope, highlight: true });
+    const htmlMdx = await processMdx(source, { scope, highlight: true });
+
+    expect(await prettier.format(htmlMd, { parser: "html" })).toMatchInlineSnapshot(expected);
+    expect(await prettier.format(htmlMdx, { parser: "html" })).toMatchInlineSnapshot(expected);
   });
 });
 

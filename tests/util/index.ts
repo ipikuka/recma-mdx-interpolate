@@ -1,18 +1,20 @@
 import { compile as compileOriginal, type CompileOptions } from "@mdx-js/mdx";
 import rehypeRaw from "rehype-raw";
+import rehypeHighlight from "rehype-highlight";
 import logTree from "unist-plugin-log-tree";
 
 import recmaMdxInterpolate, { type InterpolateOptions } from "../../src";
 
 export const compile = async (
   source: string,
-  options?: CompileOptions & InterpolateOptions,
+  options?: CompileOptions & InterpolateOptions & { highlight?: boolean },
 ) => {
   const {
     exclude = {},
     disable = false,
     interpolationSyntaxForCodeFence = "{{",
     strict = false,
+    highlight = false,
     format = "mdx",
     ...rest
   } = options ?? {};
@@ -21,7 +23,10 @@ export const compile = async (
     await compileOriginal(source, {
       format,
       ...rest,
-      rehypePlugins: format === "md" ? [rehypeRaw] : undefined,
+      rehypePlugins:
+        format === "md"
+          ? [rehypeRaw, ...(highlight ? [rehypeHighlight] : [])]
+          : [...(highlight ? [rehypeHighlight] : [])],
       recmaPlugins: [
         [recmaMdxInterpolate, { exclude, disable, interpolationSyntaxForCodeFence, strict }],
         logTree({
