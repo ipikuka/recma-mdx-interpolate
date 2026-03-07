@@ -8,6 +8,12 @@ import type {
   ArrayExpression,
 } from "estree";
 
+const regexc = /\{([^{}]+)\}/g; // with capture group, matches {expression}
+const regexc_codefence = /\{!%&([^{}]+)&%!}/g; // with capture group, matches {!%&expression&%!}
+
+const regex_if_entire = /^\{[^{}]+\}$/; // matches if the entire string is exactly one expression like {expression}
+const regex_codefence_if_entire = /^\{!%&[^{}]+&%!}$/; // matches if the entire string is exactly one expression like {!%&expression&%!}
+
 // a utility for type predicate (estree node type guards)
 function isNodeType<T extends { type: string }>(node: unknown, type: T["type"]): node is T {
   return typeof node === "object" && node !== null && "type" in node && node.type === type;
@@ -72,20 +78,18 @@ function composeMemberExpressionOrIdentifier(value: string): MemberExpression | 
 export function composeArrayExpressionForCodeFence(value: string): ArrayExpression {
   const elements: Expression[] = [];
 
-  const regex = /\{!%&([^{}]+)&%!}/g; // Matches {!%&expression&%!}
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   // If the entire value is just a single expression like "{!%&props.x&%!}"
-  const RegexCurlyBraced = /^\{!%&[^{}]+&%!}$/;
-  if (RegexCurlyBraced.test(value)) {
+  if (regex_codefence_if_entire.test(value)) {
     return {
       type: "ArrayExpression",
       elements: [composeMemberExpressionOrIdentifier(value.slice(4, -4))],
     };
   }
 
-  while ((match = regex.exec(value)) !== null) {
+  while ((match = regexc_codefence.exec(value)) !== null) {
     const [whole, expr] = match;
     const index = match.index;
 
@@ -124,13 +128,12 @@ export function composeTemplateLiteralForCodeFence(
   const quasis: TemplateElement[] = [];
   const expressions: Expression[] = [];
 
-  const regex = /\{!%&([^{}]+)&%!}/g; // Matches {!%&expression&%!}
+  const regex = regexc_codefence; // Matches {!%&expression&%!}
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   // If the entire value is just a single expression like "{props.x}"
-  const RegexCurlyBraced = /^\{!%&[^{}]+&%!}$/;
-  if (RegexCurlyBraced.test(value)) {
+  if (regex_codefence_if_entire.test(value)) {
     return composeMemberExpressionOrIdentifier(value.slice(4, -4));
   }
 
@@ -182,17 +185,15 @@ export function composeTemplateLiteral(
   const quasis: TemplateElement[] = [];
   const expressions: Expression[] = [];
 
-  const regex = /\{([^{}]+)\}/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   // If the entire value is just a single expression like "{props.x}"
-  const RegexCurlyBraced = /^\{[^{}]+\}$/;
-  if (RegexCurlyBraced.test(value)) {
+  if (regex_if_entire.test(value)) {
     return composeMemberExpressionOrIdentifier(value.slice(1, -1));
   }
 
-  while ((match = regex.exec(value)) !== null) {
+  while ((match = regexc.exec(value)) !== null) {
     const [whole, expr] = match;
     const index = match.index;
 

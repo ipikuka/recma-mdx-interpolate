@@ -73,6 +73,8 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
 
   if (settings.disable) return;
 
+  const regex = /\{[^{}]+\}/;
+
   const TAG_STRATEGIES = {
     code: {
       normalize: (val: string) => val,
@@ -88,7 +90,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
     },
     default: {
       normalize: (val: string) => normalizeBracedExpressions(decodeURI(val)),
-      regex: /\{[^{}]+\}/,
+      regex,
       composer: composeTemplateLiteral,
     },
   };
@@ -243,7 +245,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
               decodeURI(jsxAttribute.value.value),
             );
 
-            if (/\{[^{}]+\}/.test(propertyValue)) {
+            if (regex.test(propertyValue)) {
               jsxAttribute.value = {
                 type: "JSXExpressionContainer",
                 expression: composeTemplateLiteral(propertyValue),
@@ -265,7 +267,7 @@ const plugin: Plugin<[InterpolateOptions?], Program> = (options) => {
                   decodeURI(node_.expression.value),
                 );
 
-                if (/\{[^{}]+\}/.test(propertyValue)) {
+                if (regex.test(propertyValue)) {
                   node_.expression = composeTemplateLiteral(propertyValue);
                 }
               }
