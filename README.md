@@ -263,7 +263,7 @@ ${loader} {{ loader-version }}
 | **`<video>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
 | **`<audio>`**    | **`src`**, **`title`**                         |**`src`**, **`title`**                         |
 | **`<source>`**   | **`src`**                                      |**`src`**                                      |
-| **`<code>`**     | **`content (children)`**<sup>**</sup>          |**`content (children)`**<sup>**</sup>.         |
+| **`<code>`**     | **`content (children)`**<sup>**</sup>          |**`content (children)`**<sup>**</sup>          |
 
 *Note `*`: works with a workaround only.*
 

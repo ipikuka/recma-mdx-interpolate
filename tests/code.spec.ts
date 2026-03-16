@@ -2,6 +2,24 @@ import dedent from "dedent";
 
 import { compile } from "./util";
 
+describe("recma-mdx-interpolate, works with inline code", () => {
+  const source = "`{{loader}}@{{props.version}}`";
+
+  // ******************************************
+  it("handle interpolation in inline codes, format md", async () => {
+    expect(await compile(source, { format: "md" })).toContain(`
+      children: [loader, "@", props.version]
+    `);
+  });
+
+  // ******************************************
+  it("handle interpolation in inline codes, format mdx", async () => {
+    expect(await compile(source, { format: "mdx" })).toContain(`
+      children: [loader, "@", props.version]
+    `);
+  });
+});
+
 describe("recma-mdx-interpolate, code fences with default syntax", () => {
   const source = dedent`
     \`\`\`bash
