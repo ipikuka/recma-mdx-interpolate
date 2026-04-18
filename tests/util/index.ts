@@ -1,7 +1,7 @@
 import { compile as compileOriginal, type CompileOptions } from "@mdx-js/mdx";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
-import logTree from "unist-plugin-log-tree";
+import logTree from "unified-log-tree";
 
 import recmaMdxInterpolate, { type InterpolateOptions } from "../../src";
 
