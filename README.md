@@ -1,18 +1,11 @@
+# recma-mdx-interpolate
+
 **A robust Next.js newsletter `Next.js Weekly` is sponsoring me** 💖
 [![NextjsWeekly banner](./assets/next-js-weekly.png)](https://nextjsweekly.com/)
 
-### [Become a sponsor](https://github.com/sponsors/ipikuka) 🚀
+A warm thanks 🙌 to [@ErfanEbrahimnia](https://github.com/ErfanEbrahimnia), [@recepkyk](https://github.com/recepkyk), and [@LSeaburg](https://github.com/LSeaburg) for the [support](https://github.com/sponsors/ipikuka) 💖
 
-If you find **`recma-mdx-interpolate`** useful in your projects, consider supporting my work.  
-Your sponsorship means a lot 💖
-
-My sponsors are going to be featured here and on [my sponsor wall](https://github.com/sponsors/ipikuka).
-
-A warm thanks 🙌 to [@ErfanEbrahimnia](https://github.com/ErfanEbrahimnia), [@recepkyk](https://github.com/recepkyk), and [@LSeaburg](https://github.com/LSeaburg) for the support!
-
-Thank you for supporting open source! 🙌
-
-# recma-mdx-interpolate
+---
 
 [![npm version][badge-npm-version]][url-npm-package]
 [![npm downloads][badge-npm-download]][url-npm-package]
@@ -416,6 +409,14 @@ Use of **`recma-mdx-interpolate`** does not involve user content so there are no
 ## My Plugins
 
 I like to contribute the Unified / Remark / MDX ecosystem, so I recommend you to have a look my plugins.
+
+### Support My Work ([become a sponsor](https://github.com/sponsors/ipikuka) 🚀)
+
+If you find **`recma-mdx-interpolate`** or any of my projects is useful and helpful, please consider supporting my work. Your sponsorship means a lot to me and keeps these projects alive and updated! 💖
+
+My sponsors are going to be featured at the very top of the page and proudly displayed on my [Sponsor Wall](https://github.com/sponsors/ipikuka).
+
+Thank you for supporting open source! 🙌
 
 ### My Remark Plugins
 
