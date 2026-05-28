@@ -3,7 +3,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
 import logTree from "unified-log-tree";
 
-import recmaMdxInterpolate, { type InterpolateOptions } from "../../src";
+import recmaMdxInterpolate, { type InterpolateOptions } from "../../src/index.js";
 
 export const compile = async (
   source: string,

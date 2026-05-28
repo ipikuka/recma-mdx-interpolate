@@ -2,9 +2,9 @@ import type { VFileCompatible } from "vfile";
 import { evaluate, type EvaluateOptions } from "next-mdx-remote-client/rsc";
 import ReactDOMServer from "react-dom/server";
 import rehypeRaw from "rehype-raw";
-
-import plugin, { type InterpolateOptions } from "../../src";
 import rehypeHighlight from "rehype-highlight";
+
+import plugin, { type InterpolateOptions } from "../../src/index.js";
 
 export const processMd = async (
   input: VFileCompatible,

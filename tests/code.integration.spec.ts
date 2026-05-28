@@ -1,7 +1,7 @@
 import dedent from "dedent";
 import * as prettier from "prettier";
 
-import { processMd, processMdx } from "./util/integration";
+import { processMd, processMdx } from "./util/integration.js";
 
 describe("recma-mdx-interpolate, code fence integration", () => {
   // ******************************************

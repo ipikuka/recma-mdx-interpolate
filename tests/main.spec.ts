@@ -1,6 +1,6 @@
 import dedent from "dedent";
 
-import { compile } from "./util";
+import { compile } from "./util/index.js";
 
 describe("recma-mdx-interpolate, links 1", () => {
   const source = dedent`

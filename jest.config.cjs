@@ -2,6 +2,7 @@
 module.exports = {
   preset: "ts-jest/presets/default-esm-legacy",
   testEnvironment: "node",
+  moduleNameMapper: { "^(\\.\\.?\\/.+)\\.js$": "$1" },
   collectCoverageFrom: ["src/index.ts"],
   coverageReporters: ["json", "lcov", "text"],
   coverageThreshold: {
